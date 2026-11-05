@@ -1,0 +1,507 @@
+@import "tailwindcss";
+
+:root {
+  /* ── Marca ronda (misma línea visual que ronda) ──
+     Azul Real = estructura (logotipo, ala, pico) → es el acento de la app.
+     Lila Malva → Turquesa = el degradado del cuerpo del pájaro: se reserva para
+     momentos de marca (login, ilustraciones), no para controles. */
+  --brand-navy: #0A3D62;
+  --brand-lila: #A87CA3;
+  --brand-turquesa: #00D2D3;
+  --brand-gradient: linear-gradient(90deg, var(--brand-lila), var(--brand-turquesa));
+
+  /* ── Backgrounds ─────────────────────────────── */
+  --background: #F5F7FA;
+  --surface: #FFFFFF;
+  --surface-secondary: #EEF2F6;
+  --surface-elevated: #FFFFFF;
+
+  /* ── Borders ─────────────────────────────────── */
+  --border: #D6DFE8;
+  --border-strong: #A7B9CA;
+
+  /* ── Text ────────────────────────────────────── */
+  --text-primary: #1D3347;
+  --text-secondary: #4F6679;
+  --text-muted: #8A9EB1;
+
+  /* ── Acento: el Azul Real de la marca ────────── */
+  --accent: #0A3D62;
+  /* Turquesa oscurecido: el segundo tono de serie (gráficos, marcas de Preparación). */
+  --accent-secondary: #009C9D;
+  --accent-light: #DCE8F2;
+  --accent-hover: #072D49;
+  --accent-subtle: #EEF4F9;
+
+  /* ── Semantic ────────────────────────────────── */
+  --warning: #D97706;
+  --error: #DC2626;
+  --success: #16A34A;
+  --info: #0284C7;
+
+  /* ── Semantic: fondos, bordes y texto ─────────
+     Los tres colores de arriba alcanzan para un relleno fuerte (un botón rojo,
+     un punto verde), pero NO para lo que la app hace todo el tiempo: un cartel
+     de aviso, un chip de estado, una fila resaltada. Como no existían, cada
+     pantalla se inventó su propio pastel a mano — llegaron a ser 105 usos de un
+     mismo rojo claro escrito treinta veces. Estos son esos valores, declarados
+     una vez.
+
+     Tres niveles por familia, que es lo que se usa de verdad:
+       `subtle` → fondo apenas teñido (carteles grandes)
+       `light`  → fondo del chip o del badge
+       `border` → el borde de ese mismo bloque
+       `strong` → el texto ENCIMA de esos fondos (el color pleno no contrasta) */
+  --success-subtle: #F0FDF4;
+  --success-light: #DCFCE7;
+  --success-border: #BBF7D0;
+  --success-strong: #15803D;
+
+  --error-subtle: #FEF2F2;
+  --error-light: #FEE2E2;
+  --error-border: #FECACA;
+  --error-strong: #B91C1C;
+
+  --warning-subtle: #FFFBEB;
+  --warning-light: #FEF3C7;
+  --warning-border: #FDE68A;
+  --warning-strong: #B45309;
+
+  --info-subtle: #EFF6FF;
+  --info-light: #DBEAFE;
+  --info-border: #BFDBFE;
+  --info-strong: #1D4ED8;
+
+  /* ── Violeta: el segundo acento ────────────────
+     Venía usándose en ocho archivos (roles, usuarios, auditoría, analíticas)
+     sin estar declarado en ningún lado. Existe, así que se nombra. Con la marca
+     ronda sale del Lila Malva, oscurecido lo justo para que el texto contraste
+     (el lila puro sobre blanco no llega a 4.5:1). */
+  --violet: #8A5A85;
+  --violet-light: #F3EAF2;
+  --violet-strong: #6E4569;
+
+  --radius: 12px;
+
+  /* ── Safe areas (notch / barra gestual) ──────── */
+  /* Requieren `viewportFit: "cover"` en el export `viewport` de app/layout.tsx. */
+  --sa-top: env(safe-area-inset-top, 0px);
+  --sa-right: env(safe-area-inset-right, 0px);
+  --sa-bottom: env(safe-area-inset-bottom, 0px);
+  --sa-left: env(safe-area-inset-left, 0px);
+
+  /* ── Alturas de chrome móvil ─────────────────── */
+  --header-h: 3.5rem;      /* 56px */
+  --tabbar-h: 3.75rem;     /* 60px — MobileTabBar (fase 1) */
+  /* Alto total que ocupa la tab bar incluyendo la safe area inferior. */
+  --tabbar-total: calc(var(--tabbar-h) + var(--sa-bottom));
+
+  /* ── Curvas y tiempos de animación ───────────── */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 150ms;
+  --dur-base: 220ms;
+  --dur-slow: 300ms;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-secondary: var(--surface-secondary);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-accent-light: var(--accent-light);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-success: var(--success);
+  --color-info: var(--info);
+  --color-success-subtle: var(--success-subtle);
+  --color-success-light: var(--success-light);
+  --color-success-border: var(--success-border);
+  --color-success-strong: var(--success-strong);
+  --color-error-subtle: var(--error-subtle);
+  --color-error-light: var(--error-light);
+  --color-error-border: var(--error-border);
+  --color-error-strong: var(--error-strong);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-warning-light: var(--warning-light);
+  --color-warning-border: var(--warning-border);
+  --color-warning-strong: var(--warning-strong);
+  --color-info-subtle: var(--info-subtle);
+  --color-info-light: var(--info-light);
+  --color-info-border: var(--info-border);
+  --color-info-strong: var(--info-strong);
+  --color-violet: var(--violet);
+  --color-violet-light: var(--violet-light);
+  --color-violet-strong: var(--violet-strong);
+  --font-sans: var(--font-sans-app);
+  --font-mono: var(--font-geist-mono);
+  --radius-xl: var(--radius);
+
+  /* Breakpoint extra para celulares chicos (360px). Los demás son los de Tailwind. */
+  --breakpoint-xs: 26rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Bordes que no dependen de @property ─────────────────────────────────────
+   Tailwind v4 compila `border-b` como:
+       border-bottom-style: var(--tw-border-style);
+       border-bottom-width: 1px;
+   y le da valor a `--tw-border-style` con `@property { initial-value: solid }`.
+
+   Si el navegador NO soporta `@property` (iOS < 16.4, WebViews embebidas de
+   apps, Android viejo), `var(--tw-border-style)` queda vacío → la declaración
+   es inválida en tiempo de cómputo → `border-style` cae a `none` → **el borde
+   mide 0 aunque el width diga 1px**. De ahí los "border-b que no se ven" en
+   celular: los modales del POS quedaban sin las líneas que separan encabezado,
+   cuerpo y pie. Tailwind trae un fallback, pero SOLO dentro de un `@supports`
+   que apunta a Safari viejo y Firefox; cualquier otro motor sin `@property`
+   queda afuera.
+
+   Va en `:root` y NO en `*` por dos razones:
+   - `@property` declara `inherits: false`, así que en los navegadores que sí lo
+     soportan esta línea es inerte (los descendientes usan el initial-value) y
+     no pisa nada.
+   - En los que no lo soportan, `--tw-border-style` es una custom property común
+     y por lo tanto SE HEREDA: llega a todos los elementos.
+   En ambos casos, `border-dashed` (que la declara sobre el propio elemento)
+   sigue ganando, porque una declaración directa siempre le gana a la heredada.
+   Sobre `*` el minificador la borraba por "redundante" con el initial-value. */
+:root {
+  --tw-border-style: solid;
+}
+
+/* Los controles de formulario traen un ancho intrínseco del navegador (el `size`
+   por defecto de un input ≈ 175px) que actúa como mínimo y desborda las columnas
+   angostas del celular. `min-width: 0` los deja encogerse hasta su contenedor. */
+input,
+select,
+textarea {
+  min-width: 0;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-sans-app), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Filas cebra en TODAS las tablas del sistema (pedido del owner, 09/2026: con
+   volumen, sin contraste entre fila y fila cuesta seguir la línea). Va en
+   `@layer base` a propósito: así cualquier utilidad de Tailwind en la fila
+   (`bg-…`, `hover:bg-…`) y cualquier `style` inline (los fondos de
+   Preparación, una fila seleccionada) le ganan, y la cebra es solo el piso. */
+@layer base {
+  tbody > tr:nth-child(even) {
+    background-color: color-mix(in srgb, var(--surface-secondary) 55%, transparent);
+  }
+}
+
+/* Red de contención contra el scroll horizontal de página (el "scroll raro" más molesto
+   en celular). `clip` y no `hidden`: `hidden` crea un contexto de scroll que rompe
+   `position: sticky` en los hijos.
+
+   Acotado a <1024px A PROPÓSITO: en desktop no se toca nada.
+
+   ⚠️ Esto OCULTA el desborde, no lo arregla. Cada fase debe verificar igual que ningún
+   contenido quede cortado — la regla es una red de seguridad, no una solución. */
+@media (max-width: 1023px) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
+/* ── Comportamiento táctil ─────────────────────── */
+/* Elimina el delay de 300ms del doble-tap y el flash gris al tocar en Android. */
+@media (pointer: coarse) {
+  html {
+    touch-action: manipulation;
+  }
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Utilidades de safe area (se usan en shell, sheets y tab bar). */
+.pt-safe { padding-top: var(--sa-top); }
+.pr-safe { padding-right: var(--sa-right); }
+.pb-safe { padding-bottom: var(--sa-bottom); }
+.pl-safe { padding-left: var(--sa-left); }
+.px-safe { padding-left: var(--sa-left); padding-right: var(--sa-right); }
+/* Deja libre el alto de la tab bar (para contenido y botones sticky del fondo). */
+.pb-tabbar { padding-bottom: var(--tabbar-total); }
+
+/* Contenedor scrolleable estándar: corta el scroll chaining hacia el fondo
+   (la causa de los "scrolls raros" cuando un panel llega a su límite). */
+.scroll-contain {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Carrusel horizontal de chips/tabs, con imán y sin barra visible. */
+.snap-x-chips {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.snap-x-chips::-webkit-scrollbar { display: none; }
+.snap-x-chips > * { scroll-snap-align: start; flex-shrink: 0; }
+
+/* Área tocable mínima de 44px sin agrandar el ícono: se expande el hit-box. */
+.tap-44 {
+  position: relative;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+}
+
+/* Text selection with brand accent */
+::selection {
+  background: var(--accent-light);
+  color: var(--accent-hover);
+}
+
+/* Native inputs inherit brand focus */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+/* ── Inputs de fecha/hora ─────────────────────────
+   WebKit les da un ancho intrínseco propio (el del texto "dd/mm/aaaa" + el ícono
+   del calendario) y lo trata como min-width: por eso ignoran `w-full` y desbordan
+   la columna en celular.
+
+   ⚠️ NO agregar `appearance: none` acá: en WebKit eso borra el texto guía
+   "dd/mm/aaaa" y el campo vacío queda en blanco, sin pista de qué se carga.
+   `min-width: 0` + `max-width` alcanzan para que respeten el contenedor. */
+input[type="date"],
+input[type="datetime-local"],
+input[type="month"],
+input[type="time"],
+input[type="week"] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* El valor se alinea a la izquierda (WebKit lo centra al sobrar espacio). */
+input[type="date"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-width: 0;
+}
+
+/* El ícono del calendario no debe empujar el ancho ni pisar el padding derecho. */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  margin-inline-start: 0;
+  padding-inline: 0;
+  flex-shrink: 0;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface-secondary);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* En touch la barra ocupa espacio útil y no se usa: se oculta. */
+@media (pointer: coarse) {
+  ::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+  * {
+    scrollbar-width: none;
+  }
+}
+
+/* Ticket / thermal print styles */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { background: white; }
+}
+.print-only { display: none; }
+
+/* ── Animaciones de UI (paneles laterales, secciones) ── */
+@keyframes fs-panel-in {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fs-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+.fs-panel-in { animation: fs-panel-in 0.28s cubic-bezier(0.16, 1, 0.3, 1); }
+.fs-fade-in { animation: fs-fade-in 0.22s ease-out; }
+
+/* ── Set de animaciones móviles ────────────────── */
+/* Bottom sheet: sube desde el borde inferior. */
+@keyframes fs-sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: none; }
+}
+/* Modal centrado: aparece con escala (más natural que un fade seco). */
+@keyframes fs-fade-scale {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+/* Drawer lateral (sidebar móvil). */
+@keyframes fs-slide-in-left {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+/* Navegación entre pasos (POS: catálogo → carrito → cobro). */
+@keyframes fs-slide-in-right {
+  from { opacity: 0; transform: translateX(24px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fs-slide-out-left {
+  from { opacity: 1; transform: none; }
+  to { opacity: 0; transform: translateX(-24px); }
+}
+/* Overlay de fondo. */
+@keyframes fs-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Entrada escalonada de items de lista. */
+@keyframes fs-stagger-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+/* Rebote del contador al cambiar (feedback de "agregaste al carrito"). Se re-dispara
+   remontando el nodo con `key={valor}` — cada cambio reproduce la animación. */
+@keyframes fs-bump {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.4); }
+  60% { transform: scale(0.92); }
+  100% { transform: scale(1); }
+}
+
+.fs-sheet-up { animation: fs-sheet-up var(--dur-slow) var(--ease-out-expo); }
+.fs-fade-scale { animation: fs-fade-scale var(--dur-base) var(--ease-out-expo); }
+/* Modal adaptativo: en celular entra como sheet desde abajo, en ≥640px como
+   modal centrado con escala. Una sola clase para no depender de JS. */
+.fs-modal-in { animation: fs-sheet-up var(--dur-slow) var(--ease-out-expo); }
+@media (min-width: 640px) {
+  .fs-modal-in { animation: fs-fade-scale var(--dur-base) var(--ease-out-expo); }
+}
+.fs-slide-in-left { animation: fs-slide-in-left var(--dur-slow) var(--ease-out-expo); }
+.fs-slide-in-right { animation: fs-slide-in-right var(--dur-base) var(--ease-out-expo); }
+.fs-slide-out-left { animation: fs-slide-out-left var(--dur-fast) var(--ease-out-expo) forwards; }
+.fs-overlay-in { animation: fs-overlay-in var(--dur-base) ease-out; }
+.fs-bump { animation: fs-bump var(--dur-slow) var(--ease-spring); }
+/* Lectura rechazada en el escáner de Preparación: el campo "dice que no". Se
+   re-dispara remontando el nodo con `key` (como fs-bump). */
+@keyframes fs-shake {
+  20% { transform: translateX(-5px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+.fs-shake { animation: fs-shake 320ms ease-out; }
+
+/* Lista escalonada: cada hijo entra 40ms después del anterior (tope 10 para no
+   demorar listas largas). Se aplica en el contenedor: `.fs-stagger`. */
+.fs-stagger > * {
+  animation: fs-stagger-in var(--dur-base) var(--ease-out-expo) backwards;
+}
+.fs-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.fs-stagger > *:nth-child(2) { animation-delay: 40ms; }
+.fs-stagger > *:nth-child(3) { animation-delay: 80ms; }
+.fs-stagger > *:nth-child(4) { animation-delay: 120ms; }
+.fs-stagger > *:nth-child(5) { animation-delay: 160ms; }
+.fs-stagger > *:nth-child(6) { animation-delay: 200ms; }
+.fs-stagger > *:nth-child(7) { animation-delay: 240ms; }
+.fs-stagger > *:nth-child(8) { animation-delay: 280ms; }
+.fs-stagger > *:nth-child(9) { animation-delay: 320ms; }
+.fs-stagger > *:nth-child(n + 10) { animation-delay: 360ms; }
+
+/* Feedback táctil de presión: se aplica a cualquier elemento presionable. */
+.fs-press {
+  transition: transform var(--dur-fast) var(--ease-out-expo);
+}
+.fs-press:active {
+  transform: scale(0.97);
+}
+
+/* ── Accesibilidad: respetar "reducir movimiento" ── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .fs-press:active {
+    transform: none;
+  }
+}
+
+/* ── ronda: salón y cocina ───────────────────────── */
+
+/* Latido suave para lo que pide atención (mesa que llama, comanda demorada). */
+@keyframes rd-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--pulse-color, var(--error)) 45%, transparent); }
+  50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--pulse-color, var(--error)) 0%, transparent); }
+}
+.rd-pulse { animation: rd-pulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .rd-pulse { animation: none; }
+}
+
+/* Grilla del plano del salón en modo edición. */
+.rd-grid {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--border) 60%, transparent) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Ticket de 80 mm para imprimir desde el navegador (sin comandera de red). */
+.rd-ticket {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  width: 76mm;
+  color: #000;
+}
+@media print {
+  @page { size: 80mm auto; margin: 2mm; }
+  .rd-ticket { width: 100%; }
+}
