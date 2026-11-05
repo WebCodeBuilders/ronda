@@ -6,7 +6,8 @@ Leé el README primero (qué es y cómo se despliega en el local).
 
 1. **Next 16**: `params` y `searchParams` son Promises (`await`). `proxy.ts` reemplaza a `middleware`.
 2. **Prisma 7**: el cliente se genera en `app/generated/prisma` y se usa vía `@/lib/prisma`.
-   Esquema por `prisma db push`. Después de tocar `schema.prisma`: `npx prisma generate`.
+   El esquema cambia SOLO con migraciones: después de tocar `schema.prisma`, `npm run db:migrate:new`
+   y se commitea la carpeta de `prisma/migrations`. Producción aplica con `prisma migrate deploy`.
 3. **Multi-comercio**: TODA query filtra por `organizationId`.
 4. **Toda modificación de un pedido pasa por `lib/orders/service.ts`** (o `kitchen.ts`). Una
    pantalla o API que escriba `Order`/`OrderItem` a mano es un bug. Los precios los pone el servidor.

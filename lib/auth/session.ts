@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { permissionsFor, type Permission } from "@/lib/permissions";
 
@@ -24,10 +24,28 @@ const SESSION_HOURS = 12;
 
 type SessionPayload = { uid: string; oid: string; did?: string; iat: number; exp: number };
 
+// Claves de ejemplo que aparecen en la documentación: en producción no sirven.
+const EXAMPLE_SECRETS = new Set(["cambiame-por-una-clave-larga-y-secreta", "dev-secret-cambiar-en-produccion-0123456789abcdef"]);
+
 function secret(): string {
   const s = process.env.SESSION_SECRET;
-  if (!s || s.length < 16) throw new Error("Falta SESSION_SECRET (mínimo 16 caracteres) en el .env");
+  if (!s || s.length < 32) throw new Error("Falta SESSION_SECRET en el .env (mínimo 32 caracteres). Generá una con: openssl rand -base64 48");
+  if (process.env.NODE_ENV === "production" && EXAMPLE_SECRETS.has(s)) {
+    throw new Error("SESSION_SECRET es la clave de ejemplo. Generá una propia con: openssl rand -base64 48");
+  }
   return s;
+}
+
+/**
+ * Cookie "secure" cuando se entra por HTTPS (dominio en la nube o detrás de un
+ * proxy). En el wifi del local se entra por http://IP y la cookie tiene que
+ * viajar igual. COOKIE_SECURE=true la fuerza siempre.
+ */
+async function secureCookies(): Promise<boolean> {
+  if (process.env.COOKIE_SECURE === "true") return true;
+  if (process.env.COOKIE_SECURE === "false") return false;
+  const h = await headers();
+  return h.get("x-forwarded-proto") === "https";
 }
 
 function sign(data: string): string {
@@ -71,7 +89,7 @@ export async function startSession(userId: string, organizationId: string, devic
     sameSite: "lax",
     path: "/",
     maxAge: SESSION_HOURS * 3600,
-    secure: process.env.COOKIE_SECURE === "true",
+    secure: await secureCookies(),
   });
 }
 
@@ -85,7 +103,7 @@ export async function setDeviceCookie(token: string) {
     sameSite: "lax",
     path: "/",
     maxAge: 365 * 24 * 3600,
-    secure: process.env.COOKIE_SECURE === "true",
+    secure: await secureCookies(),
   });
 }
 

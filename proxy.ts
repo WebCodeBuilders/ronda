@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * Un equipo vinculado sin persona logueada va al teclado de PIN; las
  * pantallas de cocina y de retiro funcionan solo con el equipo.
  */
-const PUBLIC = ["/login", "/pin", "/vincular", "/m/", "/imprimir/"];
+const PUBLIC = ["/login", "/pin", "/vincular", "/m/", "/imprimir/", "/setup"];
 const DEVICE_ONLY = ["/cocina", "/pantalla"];
 
 export default function proxy(req: NextRequest) {

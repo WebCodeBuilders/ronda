@@ -26,7 +26,14 @@ export function QrMenu({ token, orgName, tableName, orderingEnabled, needsApprov
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState<null | "order" | "call" | "bill">(null);
 
-  const cats = menu.categories.filter((c) => menu.products.some((p) => p.categoryId === c.id));
+  // Lo que no tiene categoría también se muestra, en "Otros".
+  const known = new Set(menu.categories.map((c) => c.id));
+  const loose = menu.products.filter((p) => !p.categoryId || !known.has(p.categoryId));
+  const cats = [
+    ...menu.categories.filter((c) => menu.products.some((p) => p.categoryId === c.id)),
+    ...(loose.length ? [{ id: "__otros", name: "Otros", color: "neutral" }] : []),
+  ];
+  const productsOf = (id: string) => (id === "__otros" ? loose : menu.products.filter((p) => p.categoryId === id));
   const total = round2(cart.reduce((s, l) => s + l.unit * l.quantity, 0));
   const count = cart.reduce((s, l) => s + l.quantity, 0);
 
@@ -85,7 +92,7 @@ export function QrMenu({ token, orgName, tableName, orderingEnabled, needsApprov
           <section key={c.id}>
             <h2 className="text-lg font-bold text-text-primary mb-2">{c.name}</h2>
             <div className="rounded-2xl border border-border bg-surface divide-y divide-border overflow-hidden">
-              {menu.products.filter((p) => p.categoryId === c.id).map((p) => (
+              {productsOf(c.id).map((p) => (
                 <button key={p.id} onClick={() => orderingEnabled && !p.openPrice && setOpen(p)} className="w-full text-left flex gap-3 px-4 py-3 hover:bg-surface-secondary">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-text-primary">{p.name}</p>

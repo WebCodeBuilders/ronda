@@ -143,6 +143,9 @@ export async function addItems(ctx: Ctx, orderId: string, items: AddItemInput[],
       },
     });
     const byId = new Map(products.map((p) => [p.id, p]));
+    // Un plato sin estación (ni propia ni de su categoría) va a la primera estación:
+    // nunca se da por entregado sin que nadie lo prepare.
+    const fallbackStation = await tx.station.findFirst({ where: { organizationId: ctx.orgId, active: true }, orderBy: { sort: "asc" }, select: { id: true } });
     for (const it of items) {
       const p = byId.get(it.productId);
       if (!p) fail(404, "Uno de los productos ya no existe.");
@@ -180,7 +183,7 @@ export async function addItems(ctx: Ctx, orderId: string, items: AddItemInput[],
         data: {
           orderId: order.id,
           productId: p.id,
-          stationId: p.stationId ?? p.category?.stationId ?? null,
+          stationId: p.stationId ?? p.category?.stationId ?? fallbackStation?.id ?? null,
           name: p.shortName || p.name,
           unitPrice,
           quantity: it.quantity,

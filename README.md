@@ -74,18 +74,60 @@ puede subir a la nube (es multi-comercio desde el diseño: todo cuelga de `organ
 
 ---
 
-## Instalar
+## Instalar y publicar
 
-### Con Docker (recomendado para el local)
+### En el local o en un servidor (Docker)
+
+Requiere Docker con Docker Compose.
 
 ```bash
-cp .env.example .env    # cambiá SESSION_SECRET
-docker compose up -d
-docker compose exec app npm run db:seed   # opcional: datos de demostración
+git clone https://github.com/WebCodeBuilders/ronda.git && cd ronda
+cp .env.example .env
 ```
 
-Abrí `http://localhost:3000` en la compu principal y `http://IP-DE-LA-COMPU:3000/vincular`
-en cada tablet o pantalla.
+Completá en `.env`:
+
+| Variable | Qué poner |
+|---|---|
+| `DB_PASSWORD` | Una contraseña para la base de datos. |
+| `SESSION_SECRET` | Una clave larga: `openssl rand -base64 48`. Sin ella el sistema no arranca. |
+| `PUBLIC_URL` | Opcional: el dominio público, si los QR de las mesas tienen que funcionar fuera del wifi del local. |
+
+```bash
+docker compose up -d
+```
+
+Abrí `http://IP-DE-LA-COMPU:3000`. La primera vez aparece **Bienvenido a ronda**: cargás el
+comercio, tu usuario de dueño y la cantidad de mesas, y queda armado un salón, la cocina, la
+barra, categorías base y los medios de pago. Esa pantalla desaparece para siempre una vez
+creado el comercio.
+
+Después, en *Configuración › Equipos* generás un código para cada tablet, celular o pantalla
+de cocina, y en cada uno abrís `http://IP-DE-LA-COMPU:3000/vincular`.
+
+### Actualizar a una versión nueva
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+Al arrancar, el contenedor aplica las migraciones pendientes de la base (`prisma migrate
+deploy`), que nunca borran datos.
+
+### Copias de seguridad
+
+```bash
+docker compose exec db pg_dump -U ronda ronda > ronda-$(date +%F).sql
+```
+
+Conviene programarlo todos los días y guardar la copia fuera de la compu del local.
+
+### Publicarlo en internet
+
+Detrás de un proxy con HTTPS (Caddy, Nginx, Traefik o el panel del hosting) apuntando al
+puerto 3000. Las cookies se marcan seguras solas cuando se entra por HTTPS. El servidor
+expone `GET /api/health` para el monitoreo (200 si la base responde).
 
 ### Para desarrollar
 
@@ -93,13 +135,15 @@ Requiere Node 22 y Postgres 16.
 
 ```bash
 npm install
-cp .env.example .env     # ajustá DATABASE_URL
-npx prisma db push       # crea las tablas
-npm run db:seed          # demo: "Parador La Ronda"
+cp .env.example .env     # ajustá DATABASE_URL y SESSION_SECRET
+npm run db:migrate       # crea las tablas
+npm run db:seed          # opcional: demo "Parador La Ronda"
 npm run dev              # http://localhost:3000 (escucha en toda la red)
 ```
 
-### Demo
+Si cambiás `prisma/schema.prisma`, generá la migración con `npm run db:migrate:new`.
+
+### Demo (solo con `npm run db:seed`)
 
 | Acceso | Datos |
 |---|---|
@@ -107,6 +151,8 @@ npm run dev              # http://localhost:3000 (escucha en toda la red)
 | Encargado (email) | `encargado@ronda.app` / `ronda1234` |
 | PIN | Sofía 1111 · Diego 2222 · Carla (caja) 3333 · Lucía 4444 · Martín 5555 · Nicolás 8888 · Cocina 6666 · Repartidor 7777 |
 | Vincular equipos (`/vincular`) | 111111 caja · 222222 tablet mozo · 333333 pantalla cocina · 444444 pantalla barra · 555555 pantalla de retiro |
+
+> La demo borra y vuelve a crear el comercio "Parador La Ronda". No la corras sobre la base de un local en uso.
 
 ---
 
@@ -138,6 +184,7 @@ npm run dev              # http://localhost:3000 (escucha en toda la red)
 npm run typecheck   # tipos
 npm test            # tests de totales, estados de mesa y formato de impresión
 npm run build       # build de producción
+npm audit           # dependencias sin vulnerabilidades conocidas
 ```
 
 ---

@@ -1,14 +1,14 @@
-# Instalación en la compu principal del local:
-#   docker compose up -d            → levanta la base y ronda en el puerto 3000
-#   docker compose exec app npm run db:seed   → (opcional) carga la demo
-# Después, desde cualquier tablet o celular del wifi: http://IP-DE-ESTA-COMPU:3000
+# Instalación en la compu principal del local (o en un servidor):
+#   1. cp .env.example .env   y completá SESSION_SECRET y DB_PASSWORD
+#   2. docker compose up -d
+#   3. Abrí http://IP-DE-ESTA-COMPU:3000 y creá tu comercio.
 services:
   db:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ronda
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-ronda}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Definí DB_PASSWORD en el archivo .env}
       POSTGRES_DB: ronda
     volumes:
       - ronda-db:/var/lib/postgresql/data
@@ -23,12 +23,11 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://ronda:${DB_PASSWORD:-ronda}@db:5432/ronda
-      SESSION_SECRET: ${SESSION_SECRET:-cambiame-por-una-clave-larga-y-secreta}
+      DATABASE_URL: postgresql://ronda:${DB_PASSWORD}@db:5432/ronda
+      SESSION_SECRET: ${SESSION_SECRET:?Definí SESSION_SECRET en el archivo .env (openssl rand -base64 48)}
       PUBLIC_URL: ${PUBLIC_URL:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
     ports:
-      - "3000:3000"
-    volumes:
-      - ./public/uploads:/app/public/uploads
+      - "${PORT:-3000}:3000"
 volumes:
   ronda-db:

@@ -18,18 +18,25 @@ export function MenuPanel({ menu, onPick, busyId, disabled, counts = {} }: {
   disabled?: boolean;
   counts?: Record<string, number>;
 }) {
-  const [cat, setCat] = useState<string | null>(menu.categories[0]?.id ?? null);
+  // Lo que no tiene categoría va a una pestaña "Otros" para que nunca quede escondido.
+  const hasLoose = menu.products.some((p) => !p.categoryId || !menu.categories.some((c) => c.id === p.categoryId));
+  // Al cargar un pedido, una categoría vacía no sirve: no se muestra.
+  const withProducts = menu.categories.filter((c) => menu.products.some((p) => p.categoryId === c.id));
+  const tabs = hasLoose ? [...withProducts, { id: "__otros", name: "Otros", color: "neutral" }] : withProducts;
+  const [cat, setCat] = useState<string | null>(tabs[0]?.id ?? null);
   const [q, setQ] = useState("");
 
   const products = useMemo(() => {
     const norm = (t: string) => t.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
     const term = norm(q.trim());
     if (term) return menu.products.filter((p) => norm(p.name).includes(term));
+    if (cat === "__otros") return menu.products.filter((p) => !p.categoryId || !menu.categories.some((c) => c.id === p.categoryId));
     return menu.products.filter((p) => p.categoryId === cat);
-  }, [menu.products, cat, q]);
+  }, [menu.products, menu.categories, cat, q]);
 
   const catColor = new Map(menu.categories.map((c) => [c.id, c.color]));
-  const catCount = (id: string) => menu.products.filter((p) => p.categoryId === id).reduce((s, p) => s + (counts[p.id] ?? 0), 0);
+  const catCount = (id: string) =>
+    menu.products.filter((p) => (id === "__otros" ? !p.categoryId || !catColor.has(p.categoryId) : p.categoryId === id)).reduce((s, p) => s + (counts[p.id] ?? 0), 0);
 
   return (
     <div className="flex flex-col min-h-0 h-full">
@@ -50,7 +57,7 @@ export function MenuPanel({ menu, onPick, busyId, disabled, counts = {} }: {
         </div>
         {!q && (
           <div className="snap-x-chips gap-1.5 -mx-1 px-1 pb-1">
-            {menu.categories.map((c) => {
+            {tabs.map((c) => {
               const on = c.id === cat;
               const n = catCount(c.id);
               return (
