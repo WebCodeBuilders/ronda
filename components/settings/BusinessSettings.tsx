@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Printer, Save } from "lucide-react";
 import { Button, CurrencyInput, Input, Select } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -93,11 +92,11 @@ export function BusinessSettings({ initial }: { initial: S }) {
             <Input label="Puerto" type="number" value={s.receiptPrinterPort} onChange={(e) => set("receiptPrinterPort", Number(e.target.value) || 9100)} />
             <Select label="Papel" value={String(s.receiptPrinterWidth)} onChange={(e) => set("receiptPrinterWidth", Number(e.target.value))} options={[{ value: "42", label: "80 mm (42 caracteres)" }, { value: "48", label: "80 mm (48 caracteres)" }, { value: "32", label: "58 mm (32 caracteres)" }]} />
           </div>
-          <Button variant="outline" size="sm" icon={<Printer className="w-4 h-4" />} onClick={test}>Imprimir prueba</Button>
+          <Button variant="outline" size="sm" onClick={test}>Imprimir prueba</Button>
         </Card>
       </div>
       <div className="fixed bottom-[var(--tabbar-total)] lg:bottom-0 inset-x-0 lg:left-60 z-30 border-t border-border bg-surface/95 backdrop-blur px-4 py-3">
-        <div className="max-w-4xl mx-auto flex justify-end"><Button loading={busy} onClick={save} icon={<Save className="w-4 h-4" />}>Guardar</Button></div>
+        <div className="max-w-4xl mx-auto flex justify-end"><Button loading={busy} onClick={save}>Guardar</Button></div>
       </div>
     </PageContainer>
   );

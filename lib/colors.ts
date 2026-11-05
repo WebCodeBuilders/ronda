@@ -50,11 +50,18 @@ export function softColor(c: string | null | undefined): string {
   return SOFT[norm(c)];
 }
 
+/** Iniciales solo con letras: "Joaquín (moto)" → "JM", nunca "J(". */
 export function initials(name: string): string {
   return name
+    .replace(/[^\p{L}\s]/gu, " ")
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0]!.toUpperCase())
     .join("");
+}
+
+/** Orden natural de nombres de mesa: 1, 2, 10 (y no 1, 10, 2). */
+export function naturalCompare(a: string, b: string): number {
+  return a.localeCompare(b, "es", { numeric: true, sensitivity: "base" });
 }

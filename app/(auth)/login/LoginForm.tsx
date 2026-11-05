@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { KeyRound, Link2 } from "lucide-react";
 import { Button, Card, Input } from "@/components/ui";
 import { api } from "@/lib/client/api";
 import { safeNext } from "@/lib/auth/home";
@@ -34,13 +33,13 @@ export function LoginForm({ next }: { next: string | null }) {
         <form onSubmit={submit} className="space-y-4">
           <Input label="Email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <Input label="Contraseña" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required error={error ?? undefined} />
-          <Button type="submit" fullWidth loading={loading} icon={<KeyRound className="w-4 h-4" />}>
+          <Button type="submit" fullWidth loading={loading}>
             Entrar
           </Button>
         </form>
       </Card>
       <Link href="/vincular" className="flex items-center justify-center gap-2 text-sm font-medium text-accent hover:underline py-2">
-        <Link2 className="w-4 h-4" /> Vincular este equipo (tablet de mozo, cocina, caja)
+        Vincular este equipo (tablet de mozo, cocina, caja)
       </Link>
     </div>
   );

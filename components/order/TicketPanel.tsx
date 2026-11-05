@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ChefHat, Clock, Flame, HandPlatter, Minus, Plus, Send, StickyNote } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { Badge } from "@/components/ui";
 import type { OrderDetail } from "@/lib/orders/queries";
 import { ITEM_STATUS_LABEL, ITEM_STATUS_TONE, courseLabel } from "@/lib/orders/labels";
@@ -31,24 +31,21 @@ export function TicketPanel({
   return (
     <div className="divide-y divide-border">
       {order.customer?.notes && (
-        <div className="flex items-start gap-2 px-4 py-2.5 bg-warning-subtle text-sm text-warning-strong">
-          <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+        <div className="px-4 py-2.5 bg-warning-subtle text-sm text-warning-strong border-l-4 border-warning">
           <span><b>{order.customer.name}:</b> {order.customer.notes}</span>
         </div>
       )}
       {order.notes && (
-        <div className="flex items-start gap-2 px-4 py-2.5 bg-info-subtle text-sm text-info-strong">
-          <StickyNote className="w-4 h-4 mt-0.5 shrink-0" />
+        <div className="px-4 py-2.5 bg-info-subtle text-sm text-info-strong border-l-4 border-info">
           <span>{order.notes}</span>
         </div>
       )}
 
       {ready.length > 0 && active && (
         <div className="px-4 py-3 bg-success-subtle flex items-center gap-3">
-          <ChefHat className="w-5 h-5 text-success-strong shrink-0" />
           <p className="flex-1 text-sm font-semibold text-success-strong">{ready.length === 1 ? "1 plato listo" : `${ready.length} platos listos`} para llevar</p>
           <button onClick={onServeReady} className="h-9 px-3 rounded-xl bg-success text-white text-xs font-semibold flex items-center gap-1.5 hover:brightness-95">
-            <HandPlatter className="w-4 h-4" /> Ya los llevé
+            Ya los llevé
           </button>
         </div>
       )}
@@ -77,7 +74,7 @@ export function TicketPanel({
           action={
             canSend && active ? (
               <button onClick={() => onFireCourse(c)} className="h-8 px-3 rounded-xl bg-warning text-white text-xs font-semibold flex items-center gap-1.5 hover:brightness-95">
-                <Flame className="w-3.5 h-3.5" /> Marchar
+                Marchar
               </button>
             ) : null
           }
@@ -100,8 +97,7 @@ export function TicketPanel({
 
       {order.items.length === 0 && (
         <div className="px-4 py-12 text-center">
-          <Send className="w-7 h-7 mx-auto text-text-muted" />
-          <p className="text-sm font-semibold text-text-primary mt-3">Todavía no hay nada cargado</p>
+          <p className="text-sm font-semibold text-text-primary">Todavía no hay nada cargado</p>
           <p className="text-sm text-text-secondary mt-1">Tocá los productos de la carta para agregarlos.</p>
         </div>
       )}
@@ -177,7 +173,7 @@ function Row({ item, onClick, busy, children }: { item: Item; onClick: () => voi
         {item.notes && <p className="text-xs font-medium text-warning-strong leading-snug">{item.notes}</p>}
         {voided && item.voidReason && <p className="text-xs text-error">Anulado: {item.voidReason}</p>}
         {item.sentAt && !voided && item.status !== "SERVED" && (
-          <p className="text-[11px] text-text-muted flex items-center gap-1 mt-0.5"><Clock className="w-3 h-3" /> {item.station ?? "Cocina"} · {formatTime(item.sentAt)}</p>
+          <p className="text-[11px] text-text-muted mt-0.5">{item.station ?? "Cocina"} · {formatTime(item.sentAt)}</p>
         )}
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">

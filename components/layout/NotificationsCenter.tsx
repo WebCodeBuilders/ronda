@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, BellRing, Check, ChefHat, Hand, Printer, Receipt, RotateCcw, ShoppingBag } from "lucide-react";
+import { Bell, BellRing } from "lucide-react";
 import { useRealtime } from "@/lib/realtime/client";
 import { api } from "@/lib/client/api";
 import { useToast } from "@/components/ui/Toast";
@@ -116,9 +116,7 @@ export function NotificationsCenter({ userId }: { userId: string }) {
           {count === 0 && data.ready.length === 0 && <p className="px-4 pb-4 text-sm text-text-secondary">Nada pendiente. Todo en orden.</p>}
           {data.requests.map((r) => (
             <div key={r.id} className="flex items-start gap-3 border-t border-border px-4 py-3">
-              <span className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0", r.kind === "BILL" ? "bg-warning-light text-warning-strong" : r.kind === "ORDER" ? "bg-info-light text-info-strong" : "bg-error-light text-error-strong")}>
-                {r.kind === "BILL" ? <Receipt className="w-4 h-4" /> : r.kind === "ORDER" ? <ShoppingBag className="w-4 h-4" /> : <Hand className="w-4 h-4" />}
-              </span>
+              <span className={cn("w-1 self-stretch rounded-full shrink-0", r.kind === "BILL" ? "bg-warning" : r.kind === "ORDER" ? "bg-info" : "bg-violet")} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-text-primary">Mesa {r.tableName} · {REQUEST_KIND_LABEL[r.kind]}</p>
                 <p className="text-xs text-text-muted">{formatTime(r.createdAt)}{r.detail ? ` · ${r.detail}` : ""}{r.status === "ACK" ? " · Tomado" : ""}</p>
@@ -134,26 +132,21 @@ export function NotificationsCenter({ userId }: { userId: string }) {
           ))}
           {data.ready.map((r) => (
             <Link key={r.orderId} href={`/pedidos/${r.orderId}`} onClick={() => setOpen(false)} className="flex items-start gap-3 border-t border-border px-4 py-3 hover:bg-surface-secondary">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-success-light text-success-strong">
-                <ChefHat className="w-4 h-4" />
-              </span>
+              <span className="w-1 self-stretch rounded-full shrink-0 bg-success" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-text-primary">Listo para llevar · {r.label}</p>
                 <p className="text-xs text-text-muted">{r.count} {r.count === 1 ? "plato" : "platos"} · desde {formatTime(r.readyAt)}{r.mine ? " · tu mesa" : ""}</p>
               </div>
-              <Check className="w-4 h-4 text-text-muted mt-1" />
             </Link>
           ))}
           {data.printFailures.map((p) => (
             <div key={p.id} className="flex items-start gap-3 border-t border-border px-4 py-3">
-              <span className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-error-light text-error-strong">
-                <Printer className="w-4 h-4" />
-              </span>
+              <span className="w-1 self-stretch rounded-full shrink-0 bg-error" />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-text-primary">No imprimió: {p.title}</p>
                 <p className="text-xs text-text-muted">{p.lastError ?? "Error de impresora"} · se sigue reintentando</p>
                 <button onClick={() => retry(p.id)} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline">
-                  <RotateCcw className="w-3.5 h-3.5" /> Reintentar ahora
+                  Reintentar ahora
                 </button>
               </div>
             </div>

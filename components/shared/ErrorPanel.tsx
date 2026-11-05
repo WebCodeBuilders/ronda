@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, RotateCcw, type LucideIcon } from "lucide-react";
+import { ArrowLeft, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 type Tone = "error" | "warning" | "neutral";
@@ -73,7 +73,7 @@ export function ErrorPanel({
           </Link>
         )}
         {onRetry && (
-          <Button onClick={onRetry} icon={<RotateCcw className="w-4 h-4 shrink-0" />}>
+          <Button onClick={onRetry}>
             Reintentar
           </Button>
         )}

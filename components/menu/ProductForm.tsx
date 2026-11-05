@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Save, Trash2, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button, CurrencyInput, Input, Select, Switch, Textarea } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -74,7 +74,7 @@ export function ProductForm({ initial, defaultCategoryId, categories, stations, 
       <PageHeader
         title={p.id ? p.name || "Producto" : "Nuevo producto"}
         back={{ href: "/carta", label: "Carta" }}
-        action={p.id ? <Button variant="danger-outline" size="sm" icon={<Trash2 className="w-4 h-4" />} onClick={() => setConfirmDel(true)}>Dar de baja</Button> : undefined}
+        action={p.id ? <Button variant="danger-outline" size="sm" onClick={() => setConfirmDel(true)}>Dar de baja</Button> : undefined}
       />
       <div className="space-y-3 lg:space-y-4 pb-24">
         <Section title="Datos">
@@ -175,7 +175,7 @@ export function ProductForm({ initial, defaultCategoryId, categories, stations, 
             );
           })}
           {ingredients.length > 0 ? (
-            <Button type="button" variant="outline" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => set("recipe", [...p.recipe, { ingredientId: ingredients[0]!.id, quantity: 1 }])}>Agregar insumo</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => set("recipe", [...p.recipe, { ingredientId: ingredients[0]!.id, quantity: 1 }])}>Agregar insumo</Button>
           ) : (
             <p className="text-sm text-text-secondary">Cargá insumos en la pantalla Insumos para armar recetas.</p>
           )}
@@ -185,7 +185,7 @@ export function ProductForm({ initial, defaultCategoryId, categories, stations, 
       <div className="fixed bottom-[var(--tabbar-total)] lg:bottom-0 inset-x-0 lg:left-60 z-30 border-t border-border bg-surface/95 backdrop-blur px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-center justify-end gap-2">
           <Button variant="outline" onClick={() => router.push("/carta")}>Cancelar</Button>
-          <Button loading={busy} disabled={!p.name.trim()} onClick={save} icon={<Save className="w-4 h-4" />}>Guardar</Button>
+          <Button loading={busy} disabled={!p.name.trim()} onClick={save}>Guardar</Button>
         </div>
       </div>
 

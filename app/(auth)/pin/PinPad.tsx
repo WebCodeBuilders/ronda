@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, Delete, Monitor } from "lucide-react";
+import { ChevronLeft, Delete } from "lucide-react";
 import { Card } from "@/components/ui";
 import { api } from "@/lib/client/api";
 import { safeNext } from "@/lib/auth/home";
@@ -55,7 +55,7 @@ export function PinPad({ users, deviceName, orgName, next }: { users: U[]; devic
         <div className="text-center mb-6">
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">¿Quién sos?</h1>
           <p className="text-sm text-text-secondary mt-1 flex items-center justify-center gap-1.5">
-            <Monitor className="w-4 h-4" /> {orgName} · {deviceName}
+            {orgName} · {deviceName}
           </p>
         </div>
         {users.length === 0 ? (

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, MessageCircle, Save, Wallet } from "lucide-react";
+import { ChevronRight, MessageCircle } from "lucide-react";
 import { Badge, Button, CurrencyInput, Input, Select, Sheet, Textarea } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -57,7 +57,7 @@ export function CustomerDetail({ customer, stats, favorites, orders, movements, 
   return (
     <PageContainer width="wide">
       <PageHeader title={customer.name} back={{ href: "/clientes", label: "Clientes" }} meta={customer.tags.map((t) => <Badge key={t} tone="violet">{t}</Badge>)}
-        action={<>{wa && <a href={wa} target="_blank" rel="noreferrer" className="h-10 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-success-strong flex items-center gap-1.5"><MessageCircle className="w-4 h-4" /> WhatsApp</a>}{canCharge && customer.balance > 0 && <Button size="sm" icon={<Wallet className="w-4 h-4" />} onClick={() => setPay(true)}>Registrar pago</Button>}</>}
+        action={<>{wa && <a href={wa} target="_blank" rel="noreferrer" className="h-10 px-3 rounded-xl border border-border bg-surface text-sm font-semibold text-success-strong flex items-center gap-1.5"><MessageCircle className="w-4 h-4" /> WhatsApp</a>}{canCharge && customer.balance > 0 && <Button size="sm" onClick={() => setPay(true)}>Registrar pago</Button>}</>}
       />
       <div className="grid gap-3 lg:gap-4 lg:grid-cols-[22rem_minmax(0,1fr)]">
         <div className="space-y-3 lg:space-y-4">
@@ -87,7 +87,7 @@ export function CustomerDetail({ customer, stats, favorites, orders, movements, 
               <CurrencyInput value={c.creditLimit} onChange={(v) => set("creditLimit", v ?? 0)} />
             </div>
             <Input label="Etiquetas (separadas por coma)" value={c.tags.join(", ")} onChange={(e) => set("tags", e.target.value.split(",").map((t) => t.trim()).filter(Boolean))} />
-            <Button fullWidth loading={busy} onClick={save} icon={<Save className="w-4 h-4" />}>Guardar</Button>
+            <Button fullWidth loading={busy} onClick={save}>Guardar</Button>
           </div>
         </div>
         <div className="space-y-3 lg:space-y-4 min-w-0">

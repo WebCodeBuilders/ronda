@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ShieldCheck } from "lucide-react";
 import { Button, Input, Sheet } from "@/components/ui";
 
 /**
@@ -29,7 +28,7 @@ export function ManagerPinDialog({ title, onClose, onSubmit }: { title: string; 
 
   return (
     <Sheet open onClose={onClose} title={`${title}: autorización`} description="Hace falta el PIN de un encargado." maxWidth="max-w-xs"
-      footer={<Button fullWidth loading={busy} disabled={pin.length !== 4} onClick={() => submit()} icon={<ShieldCheck className="w-4 h-4" />}>Autorizar</Button>}
+      footer={<Button fullWidth loading={busy} disabled={pin.length !== 4} onClick={() => submit()}>Autorizar</Button>}
     >
       <form onSubmit={submit}>
         <Input

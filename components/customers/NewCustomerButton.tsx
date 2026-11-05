@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { Button, Input, Sheet, Textarea } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/client/api";
@@ -22,7 +21,7 @@ export function NewCustomerButton() {
   }
   return (
     <>
-      <Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setOpen(true)}>Nuevo cliente</Button>
+      <Button size="sm" onClick={() => setOpen(true)}>Nuevo cliente</Button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Nuevo cliente" maxWidth="max-w-md" footer={<Button fullWidth disabled={!c.name.trim()} onClick={save}>Guardar</Button>}>
         <div className="space-y-3">
           <Input label="Nombre" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />

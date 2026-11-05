@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, Plus } from "lucide-react";
 import { Badge, Button, Input, Select, Sheet } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -19,7 +18,7 @@ export function UsersSettings({ users, me, isOwner }: { users: U[]; me: string; 
   const [edit, setEdit] = useState<U | null>(null);
   return (
     <PageContainer width="default">
-      <PageHeader title="Usuarios y permisos" back={{ href: "/configuracion", label: "Configuración" }} action={<Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setEdit({ name: "", role: "WAITER", color: "success", email: "", active: true, hasPin: false })}>Nuevo usuario</Button>} />
+      <PageHeader title="Usuarios y permisos" back={{ href: "/configuracion", label: "Configuración" }} action={<Button size="sm" onClick={() => setEdit({ name: "", role: "WAITER", color: "success", email: "", active: true, hasPin: false })}>Nuevo usuario</Button>} />
       <p className="text-sm text-text-secondary mb-3">Cada persona entra a las terminales con su PIN de 4 números. El dueño y el encargado pueden además entrar con email desde cualquier lado.</p>
       <div className="rounded-2xl border border-border bg-surface divide-y divide-border">
         {users.map((u) => (
@@ -29,7 +28,7 @@ export function UsersSettings({ users, me, isOwner }: { users: U[]; me: string; 
               <p className="text-sm font-semibold text-text-primary">{u.name}{u.id === me ? " (vos)" : ""}</p>
               <p className="text-xs text-text-muted truncate">{ROLE_LABELS[u.role as Role]}{u.email ? ` · ${u.email}` : ""}</p>
             </div>
-            {u.hasPin && <Badge tone="neutral"><KeyRound className="w-3 h-3" /> PIN</Badge>}
+            {u.hasPin && <Badge tone="neutral">Con PIN</Badge>}
             {!u.active && <Badge>Inactivo</Badge>}
           </button>
         ))}

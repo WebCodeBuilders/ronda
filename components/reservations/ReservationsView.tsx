@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, ChevronLeft, ChevronRight, Clock, MessageCircle, Plus, UserPlus, Users, Armchair } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Badge, Button, Input, Select, Sheet, Textarea } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -67,13 +67,13 @@ export function ReservationsView({ orgName, day, reservations, waitlist, tables 
 
   return (
     <PageContainer width="wide">
-      <PageHeader title="Reservas" action={<><Button variant="outline" size="sm" icon={<UserPlus className="w-4 h-4" />} onClick={() => setCreate("WAITLIST")}>Lista de espera</Button><Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setCreate("RESERVATION")}>Nueva reserva</Button></>} />
+      <PageHeader title="Reservas" action={<><Button variant="outline" size="sm" onClick={() => setCreate("WAITLIST")}>Lista de espera</Button><Button size="sm" onClick={() => setCreate("RESERVATION")}>Nueva reserva</Button></>} />
       <div className="grid gap-3 lg:gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <div className="flex items-center gap-2 mb-3">
             <button onClick={() => router.push(`/reservas?dia=${shiftDay(day, -1)}`)} className="tap-44 flex items-center justify-center rounded-xl border border-border bg-surface" aria-label="Día anterior"><ChevronLeft className="w-4 h-4" /></button>
             <div className="flex-1 text-center">
-              <p className="text-base font-semibold text-text-primary flex items-center justify-center gap-1.5"><CalendarDays className="w-4 h-4" /> {label}</p>
+              <p className="text-base font-semibold text-text-primary">{label}</p>
               <p className="text-xs text-text-muted">{active.length} reservas · {covers} cubiertos</p>
             </div>
             <button onClick={() => router.push(`/reservas?dia=${shiftDay(day, 1)}`)} className="tap-44 flex items-center justify-center rounded-xl border border-border bg-surface" aria-label="Día siguiente"><ChevronRight className="w-4 h-4" /></button>
@@ -84,17 +84,17 @@ export function ReservationsView({ orgName, day, reservations, waitlist, tables 
               <div key={r.id} className={cn("flex flex-wrap items-center gap-3 px-4 py-3", ["CANCELLED", "NO_SHOW", "DONE"].includes(r.status) && "opacity-60")}>
                 <span className="w-14 text-lg font-bold tabular-nums text-text-primary">{formatTime(r.dateTime)}</span>
                 <div className="flex-1 min-w-40">
-                  <p className="text-sm font-semibold text-text-primary">{r.name} · <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" />{r.partySize}</span>{r.table ? ` · Mesa ${r.table}` : r.areaPreference ? ` · ${r.areaPreference}` : ""}</p>
+                  <p className="text-sm font-semibold text-text-primary">{r.name} · {r.partySize} personas{r.table ? ` · Mesa ${r.table}` : r.areaPreference ? ` · ${r.areaPreference}` : ""}</p>
                   <p className="text-xs text-text-muted">{[r.phone, r.notes].filter(Boolean).join(" · ") || "Sin notas"}</p>
                 </div>
                 <Badge tone={TONE[r.status]}>{RESERVATION_STATUS_LABEL[r.status]}</Badge>
                 {["PENDING", "CONFIRMED"].includes(r.status) && (
                   <div className="flex gap-1.5">
-                    <Button size="sm" icon={<Armchair className="w-4 h-4" />} onClick={() => setSeat(r)}>Sentar</Button>
+                    <Button size="sm" onClick={() => setSeat(r)}>Sentar</Button>
                     {r.status === "PENDING" && <Button size="sm" variant="outline" onClick={() => status(r, "CONFIRMED")}>Confirmar</Button>}
                     <Button size="sm" variant="ghost" onClick={() => status(r, "NO_SHOW")}>No vino</Button>
                     <Button size="sm" variant="ghost" onClick={() => status(r, "CANCELLED")}>Cancelar</Button>
-                    {r.phone && <a href={wa(r.phone, `Hola ${r.name}! Te confirmamos la reserva en ${orgName} para ${r.partySize} a las ${formatTime(r.dateTime)}. ¡Te esperamos!`)} target="_blank" rel="noreferrer" className="h-10 lg:h-8 w-10 lg:w-8 rounded-xl border border-border flex items-center justify-center text-success-strong" aria-label="WhatsApp"><MessageCircle className="w-4 h-4" /></a>}
+                    {r.phone && <a href={wa(r.phone, `Hola ${r.name}! Te confirmamos la reserva en ${orgName} para ${r.partySize} a las ${formatTime(r.dateTime)}. ¡Te esperamos!`)} target="_blank" rel="noreferrer" className="h-10 lg:h-8 px-3 rounded-xl text-xs font-semibold text-success-strong flex items-center hover:bg-success-subtle">WhatsApp</a>}
                   </div>
                 )}
               </div>
@@ -102,7 +102,7 @@ export function ReservationsView({ orgName, day, reservations, waitlist, tables 
           </div>
         </div>
         <div>
-          <h2 className="text-sm font-semibold text-text-primary mb-2 flex items-center gap-1.5"><Clock className="w-4 h-4" /> Lista de espera ({waitlist.length})</h2>
+          <h2 className="text-sm font-semibold text-text-primary mb-2">Lista de espera ({waitlist.length})</h2>
           <div className="rounded-2xl border border-border bg-surface divide-y divide-border">
             {waitlist.length === 0 && <p className="px-4 py-6 text-center text-sm text-text-secondary">Nadie esperando.</p>}
             {waitlist.map((w) => {
@@ -117,7 +117,7 @@ export function ReservationsView({ orgName, day, reservations, waitlist, tables 
                   {w.notes && <p className="text-xs text-text-muted">{w.notes}</p>}
                   <div className="flex gap-1.5 mt-2">
                     <Button size="sm" onClick={() => setSeat(w)}>Sentar</Button>
-                    {w.phone && <a href={wa(w.phone, `Hola ${w.name}! Tu mesa en ${orgName} ya está lista. Te esperamos.`)} target="_blank" rel="noreferrer" className="h-10 lg:h-8 px-3 rounded-xl border border-border text-xs font-semibold text-success-strong flex items-center gap-1"><MessageCircle className="w-4 h-4" /> Avisar</a>}
+                    {w.phone && <a href={wa(w.phone, `Hola ${w.name}! Tu mesa en ${orgName} ya está lista. Te esperamos.`)} target="_blank" rel="noreferrer" className="h-10 lg:h-8 px-3 rounded-xl border border-border text-xs font-semibold text-success-strong flex items-center gap-1">Avisar por WhatsApp</a>}
                     <Button size="sm" variant="ghost" onClick={() => status(w, "CANCELLED")}>Se fue</Button>
                   </div>
                 </div>

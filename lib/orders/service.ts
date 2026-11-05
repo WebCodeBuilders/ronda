@@ -163,6 +163,19 @@ export async function addItems(ctx: Ctx, orderId: string, items: AddItemInput[],
         base = it.price;
       }
       const unitPrice = round2(base + mods.reduce((s, m) => s + m.priceDelta, 0));
+      const notes = it.notes?.trim() || null;
+      const course = it.course ?? p.course;
+      const seat = it.seat ?? null;
+      // Lo mismo, sin marchar todavía: se suma al renglón que ya está ("2× Pinta", no dos renglones).
+      const same = await tx.orderItem.findFirst({
+        where: { orderId: order.id, productId: p.id, status: "DRAFT", unitPrice, notes, course, seat },
+      });
+      const sameMods = same && JSON.stringify((same.modifiers as ModSnap[]).map((m) => m.name).sort()) === JSON.stringify(mods.map((m) => m.name).sort());
+      if (same && sameMods) {
+        const quantity = same.quantity + it.quantity;
+        await tx.orderItem.update({ where: { id: same.id }, data: { quantity, total: lineTotal(unitPrice, quantity) } });
+        continue;
+      }
       await tx.orderItem.create({
         data: {
           orderId: order.id,
@@ -173,9 +186,9 @@ export async function addItems(ctx: Ctx, orderId: string, items: AddItemInput[],
           quantity: it.quantity,
           total: lineTotal(unitPrice, it.quantity),
           modifiers: mods,
-          notes: it.notes?.trim() || null,
-          course: it.course ?? p.course,
-          seat: it.seat ?? null,
+          notes,
+          course,
+          seat,
           status: "DRAFT",
           createdById: opts.createdById ?? ctx.user?.id ?? null,
         },

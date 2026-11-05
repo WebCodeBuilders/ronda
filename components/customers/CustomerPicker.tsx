@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Search, UserRound, X, Plus } from "lucide-react";
+import { Search, UserRound, X } from "lucide-react";
 import { api } from "@/lib/client/api";
 import { formatCurrency, cn } from "@/lib/utils";
 
@@ -70,7 +70,7 @@ export function CustomerPicker({ value, onChange, allowCreate = true }: { value:
           ))}
           {allowCreate && q.trim() && (
             <button onClick={create} disabled={creating} className={cn("w-full flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-accent hover:bg-surface-secondary", creating && "opacity-60")}>
-              <Plus className="w-4 h-4" /> Crear cliente "{q.trim()}"
+              Crear cliente "{q.trim()}"
             </button>
           )}
         </div>

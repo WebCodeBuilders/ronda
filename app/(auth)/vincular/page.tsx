@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Link2 } from "lucide-react";
 import { Button, Card, Input } from "@/components/ui";
 import { api } from "@/lib/client/api";
 
@@ -44,7 +43,7 @@ export default function PairPage() {
             error={error ?? undefined}
             required
           />
-          <Button type="submit" fullWidth loading={loading} disabled={code.length !== 6} icon={<Link2 className="w-4 h-4" />}>
+          <Button type="submit" fullWidth loading={loading} disabled={code.length !== 6}>
             Vincular
           </Button>
         </form>

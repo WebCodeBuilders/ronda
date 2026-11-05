@@ -1,6 +1,5 @@
 "use client";
 
-import { Wifi, WifiOff } from "lucide-react";
 import { useRealtimeStatus } from "@/lib/realtime/client";
 import { cn } from "@/lib/utils";
 
@@ -19,7 +18,7 @@ export function LiveIndicator({ className }: { className?: string }) {
       )}
       title={live ? "Conectado: todo se actualiza solo" : "Sin conexión en vivo: reconectando"}
     >
-      {live ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
+      <span className={cn("w-2 h-2 rounded-full", live ? "bg-success" : "bg-warning animate-pulse")} />
       <span className="hidden sm:inline">{live ? "En vivo" : "Reconectando"}</span>
     </span>
   );

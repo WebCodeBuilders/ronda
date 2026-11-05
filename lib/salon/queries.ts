@@ -1,6 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/prisma";
 import { tableState, type TableState } from "./state";
+import { naturalCompare } from "@/lib/colors";
 
 export type SalonTable = {
   id: string;
@@ -50,7 +51,7 @@ export async function loadSalon(orgId: string): Promise<SalonData> {
         tickets: { where: { status: { in: ["NEW", "PREPARING"] } }, select: { createdAt: true }, orderBy: { createdAt: "asc" }, take: 1 },
       },
     }),
-    prisma.serviceRequest.groupBy({ by: ["tableId"], where: { organizationId: orgId, status: { in: ["OPEN"] } }, _count: true }),
+    prisma.serviceRequest.groupBy({ by: ["tableId", "kind"], where: { organizationId: orgId, status: { in: ["OPEN"] } }, _count: true }),
     prisma.reservation.findMany({
       where: {
         organizationId: orgId,
@@ -63,14 +64,20 @@ export async function loadSalon(orgId: string): Promise<SalonData> {
     }),
   ]);
   const orderByTable = new Map(orders.map((o) => [o.tableId!, o]));
-  const reqByTable = new Map(requests.map((r) => [r.tableId, r._count]));
+  // Pedir la cuenta desde el QR se ve como "pidió la cuenta"; llamar o pedir platos, como "llama".
+  const reqByTable = new Map<string, number>();
+  const billByTable = new Set<string>();
+  for (const r of requests) {
+    if (r.kind === "BILL") billByTable.add(r.tableId);
+    else reqByTable.set(r.tableId, (reqByTable.get(r.tableId) ?? 0) + r._count);
+  }
   const resByTable = new Map<string, (typeof reservations)[number]>();
   for (const r of reservations) if (!resByTable.has(r.tableId!)) resByTable.set(r.tableId!, r);
 
   return {
     lateMinutes: org.kitchenLateMinutes,
     areas: areas.map((a) => ({ id: a.id, name: a.name, width: a.width, height: a.height })),
-    tables: tables.map((t) => {
+    tables: tables.sort((a, b) => naturalCompare(a.name, b.name)).map((t) => {
       const o = orderByTable.get(t.id);
       const ready = o?.items.filter((i) => i.status === "READY").length ?? 0;
       const draft = o?.items.filter((i) => i.status === "DRAFT").length ?? 0;
@@ -79,7 +86,7 @@ export async function loadSalon(orgId: string): Promise<SalonData> {
       const state = tableState(
         {
           hasOrder: !!o,
-          orderStatus: o?.status,
+          orderStatus: billByTable.has(t.id) ? "BILLING" : o?.status,
           readyItems: ready,
           draftItems: draft,
           oldestPendingSentAt: o?.tickets[0]?.createdAt ?? null,

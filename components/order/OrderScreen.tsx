@@ -3,9 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft, ArrowRightLeft, Ban, BadgePercent, Bike, Combine, Flame, MoreHorizontal, Printer, Receipt, RotateCcw, Send, StickyNote, UserRound, Users, Wallet, UserCog, Phone, MapPin,
-} from "lucide-react";
+import { ArrowLeft, ArrowRightLeft, Ban, BadgePercent, Bike, Combine, MoreHorizontal, Printer, Receipt, RotateCcw, StickyNote, UserRound, Users, UserCog } from "lucide-react";
 import { Badge, Button, Input, Select, Sheet, Textarea } from "@/components/ui";
 import { CurrencyInput } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
@@ -21,6 +19,8 @@ import { TicketPanel } from "./TicketPanel";
 import { PaymentSheet, type PayMethod } from "./PaymentSheet";
 import { CustomerPicker, type PickedCustomer } from "@/components/customers/CustomerPicker";
 import { ManagerPinDialog } from "./ManagerPinDialog";
+import { useNavSection } from "@/components/layout/nav-override";
+import { useEffect } from "react";
 
 type Item = OrderDetail["items"][number];
 type TableOpt = { id: string; name: string; area: string; orderId: string | null; hasPayments: boolean };
@@ -53,6 +53,19 @@ export function OrderScreen({ order, menu, methods, tables, staff, settings, can
   const label = order.table ? `Mesa ${order.table.name}` : `${ORDER_TYPE_LABEL[order.type]} #${order.number}`;
   const back = order.table ? { href: "/salon", label: "Salón" } : order.fulfillment ? { href: "/delivery", label: "Delivery y retiro" } : { href: "/pedidos", label: "Pedidos" };
   const liveCount = order.items.filter((i) => i.status !== "VOID").reduce((s, i) => s + i.quantity, 0);
+  useNavSection(back.href);
+  // Cuántos de cada plato hay en la cuenta: se ve sobre la tarjeta de la carta.
+  const inOrder: Record<string, number> = {};
+  for (const i of order.items) if (i.productId && i.status !== "VOID") inOrder[i.productId] = (inOrder[i.productId] ?? 0) + i.quantity;
+  const draftQty = drafts.reduce((s, d) => s + d.quantity, 0);
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => {
+    setNow(Date.now());
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  const minutes = now ? Math.max(0, Math.floor((now - new Date(order.openedAt).getTime()) / 60000)) : null;
+  const elapsed = minutes === null ? "" : minutes >= 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60} min` : `${minutes} min`;
 
   async function run(key: string, fn: () => Promise<unknown>, ok?: string) {
     setBusy(key);
@@ -150,82 +163,87 @@ export function OrderScreen({ order, menu, methods, tables, staff, settings, can
   const mergeable = tables.filter((t) => t.orderId && t.orderId !== order.id && !t.hasPayments);
 
   const footer = (
-    <div className="border-t border-border bg-surface p-3 space-y-2 shrink-0">
+    <div className="border-t border-border bg-surface p-3 pb-[calc(0.75rem+var(--sa-bottom))] lg:pb-3 space-y-2 shrink-0">
       {active && drafts.length > 0 && can.send ? (
         <div className="flex gap-2">
-          <Button className="flex-1" size="lg" loading={busy === "send"} onClick={() => send(false)} icon={<Send className="w-5 h-5" />}>
-            Marchar {formatQty(drafts.reduce((s, d) => s + d.quantity, 0))}
+          <Button className="flex-1" size="lg" loading={busy === "send"} onClick={() => send(false)}>
+            Marchar {formatQty(draftQty)}
           </Button>
           {new Set(drafts.filter((d) => d.course > 0).map((d) => d.course)).size > 1 && (
-            <Button variant="outline" size="lg" disabled={busy === "send"} onClick={() => send(true)} icon={<Flame className="w-4 h-4" />} title="Sale el primer paso; el resto espera tu aviso">
+            <Button variant="outline" size="lg" disabled={busy === "send"} onClick={() => send(true)} title="Sale el primer paso; el resto espera tu aviso">
               Por pasos
             </Button>
           )}
         </div>
       ) : active ? (
         <div className="flex gap-2">
-          <Button variant="outline" size="lg" className="flex-1" loading={busy === "bill"} onClick={bill} icon={<Printer className="w-4 h-4" />} disabled={order.items.length === 0}>
+          <Button variant="outline" size="lg" className="flex-1" loading={busy === "bill"} onClick={bill} disabled={order.items.length === 0}>
             Precuenta
           </Button>
           {can.charge && (
-            <Button size="lg" className="flex-1" onClick={() => (settings.cashOpen ? setPanel("pay") : toast.error("La caja está cerrada", "Abrila en Caja para poder cobrar."))} icon={<Wallet className="w-5 h-5" />} disabled={order.total <= 0}>
+            <Button size="lg" className="flex-1" onClick={() => (settings.cashOpen ? setPanel("pay") : toast.error("La caja está cerrada", "Abrila en Caja para poder cobrar."))} disabled={order.total <= 0}>
               Cobrar {formatCurrency(order.total - order.paidAmount)}
             </Button>
           )}
         </div>
       ) : (
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" loading={busy === "bill"} onClick={bill} icon={<Receipt className="w-4 h-4" />}>Reimprimir</Button>
-          {order.status === "PAID" && can.reopen && <Button variant="outline" className="flex-1" onClick={() => setPanel("reopen")} icon={<RotateCcw className="w-4 h-4" />}>Reabrir</Button>}
+          <Button variant="outline" className="flex-1" loading={busy === "bill"} onClick={bill}>Reimprimir</Button>
+          {order.status === "PAID" && can.reopen && <Button variant="outline" className="flex-1" onClick={() => setPanel("reopen")}>Reabrir</Button>}
         </div>
       )}
     </div>
   );
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-3.5rem-var(--tabbar-total))] lg:h-[calc(100dvh-3.5rem)]">
-      {/* Encabezado del pedido */}
-      <div className="flex items-center gap-2 px-3 lg:px-4 h-14 border-b border-border bg-surface shrink-0">
-        <Link href={back.href} className="flex items-center gap-1 h-10 px-2 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface-secondary shrink-0">
+    <div className="flex flex-col h-[calc(100dvh-3.5rem)]">
+      {/* Encabezado del pedido: qué mesa, cuántos, quién y hace cuánto. */}
+      <div className="flex items-center gap-2 px-2 lg:px-4 h-14 border-b border-border bg-surface shrink-0">
+        <Link href={back.href} className="tap-44 flex items-center justify-center gap-1 rounded-xl text-sm font-medium text-text-secondary hover:bg-surface-secondary shrink-0 sm:px-2" aria-label={`Volver a ${back.label}`}>
           <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">{back.label}</span>
         </Link>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight text-text-primary truncate">{label}</h1>
-            <Badge tone={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABEL[order.status]}</Badge>
-            {order.fulfillment && <Badge tone="info" className="hidden sm:inline-flex">{FULFILLMENT_LABEL[order.fulfillment]}</Badge>}
+        <div className="min-w-0 flex-1 flex items-center gap-3">
+          <h1 className="text-lg lg:text-xl font-bold tracking-tight text-text-primary truncate">{label}</h1>
+          <div className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary min-w-0">
+            <span className="truncate">{order.guests} {order.guests === 1 ? "persona" : "personas"}</span>
+            <span className="text-text-muted">·</span>
+            <span className="truncate">{order.waiter?.name ?? "Sin mozo"}</span>
+            {elapsed && <><span className="text-text-muted">·</span><span className="tabular-nums whitespace-nowrap">{elapsed}</span></>}
+            {order.customerName && !order.table && <><span className="text-text-muted">·</span><span className="truncate">{order.customerName}</span></>}
           </div>
-          <p className="text-xs text-text-muted truncate">
-            #{order.number} · {order.table ? `${order.table.area} · ` : ""}{order.guests} {order.guests === 1 ? "persona" : "personas"} · {order.waiter?.name ?? "Sin mozo"} · desde {formatTime(order.openedAt)}
-            {order.customerName && !order.table ? ` · ${order.customerName}` : ""}
-          </p>
+          {order.status !== "OPEN" && <Badge tone={ORDER_STATUS_TONE[order.status]}>{ORDER_STATUS_LABEL[order.status]}</Badge>}
+          {order.fulfillment && <Badge tone="info" className="hidden md:inline-flex">{FULFILLMENT_LABEL[order.fulfillment]}</Badge>}
         </div>
+        <span className="sm:hidden text-xs text-text-secondary tabular-nums whitespace-nowrap">{order.guests}p · {elapsed}</span>
         <button onClick={() => setPanel("actions")} className="tap-44 flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface-secondary" aria-label="Más acciones">
           <MoreHorizontal className="w-5 h-5" />
-        </button>
-      </div>
-
-      {/* Pestañas en celular */}
-      <div className="lg:hidden grid grid-cols-2 border-b border-border bg-surface shrink-0">
-        <button onClick={() => setTab("menu")} className={cn("h-11 text-sm font-semibold border-b-2", tab === "menu" ? "border-accent text-accent" : "border-transparent text-text-secondary")}>Carta</button>
-        <button onClick={() => setTab("ticket")} className={cn("h-11 text-sm font-semibold border-b-2", tab === "ticket" ? "border-accent text-accent" : "border-transparent text-text-secondary")}>
-          Cuenta ({formatQty(liveCount)}) · {formatCurrency(order.total)}
         </button>
       </div>
 
       <div className="flex-1 min-h-0 lg:grid lg:grid-cols-[minmax(0,1fr)_26rem] xl:grid-cols-[minmax(0,1fr)_28rem]">
         <div className={cn("h-full min-h-0 bg-background", tab === "menu" ? "flex flex-col" : "hidden", "lg:flex lg:flex-col")}>
           {active && can.edit ? (
-            <MenuPanel menu={menu} onPick={addProduct} busyId={busyProduct} />
+            <MenuPanel menu={menu} onPick={addProduct} busyId={busyProduct} counts={inOrder} />
           ) : (
             <div className="m-4 rounded-2xl border border-border bg-surface p-6 text-sm text-text-secondary">
               {active ? "No tenés permiso para cargar productos." : order.status === "PAID" ? `Cobrado el ${formatTime(order.closedAt ?? order.openedAt)}. Para cambiar algo hay que reabrirlo.` : `Anulado${order.cancelReason ? `: ${order.cancelReason}` : ""}.`}
             </div>
           )}
-          {/* En celular, el botón de marchar también se ve desde la carta */}
-          {tab === "menu" && drafts.length > 0 && <div className="lg:hidden">{footer}</div>}
+          {/* Celular: la cuenta y marchar siempre a mano, sin salir de la carta. */}
+          <div className="lg:hidden border-t border-border bg-surface p-3 pb-[calc(0.75rem+var(--sa-bottom))] flex gap-2 shrink-0">
+            <Button variant="outline" size="lg" className="flex-1 justify-between" onClick={() => setTab("ticket")}>
+              <span>Cuenta{liveCount ? ` (${formatQty(liveCount)})` : ""}</span>
+              <span className="tabular-nums">{formatCurrency(order.total)}</span>
+            </Button>
+            {active && draftQty > 0 && can.send && (
+              <Button size="lg" className="flex-1" loading={busy === "send"} onClick={() => send(false)}>Marchar {formatQty(draftQty)}</Button>
+            )}
+          </div>
         </div>
         <div className={cn("h-full min-h-0 border-l border-border bg-surface", tab === "ticket" ? "flex flex-col" : "hidden", "lg:flex lg:flex-col")}>
+          <button onClick={() => setTab("menu")} className="lg:hidden flex items-center gap-1.5 h-11 px-4 border-b border-border text-sm font-semibold text-accent shrink-0">
+            <ArrowLeft className="w-4 h-4" /> Seguir cargando
+          </button>
           <div className="flex-1 min-h-0 overflow-y-auto scroll-contain">
             <TicketPanel
               order={order}
@@ -358,10 +376,9 @@ export function OrderScreen({ order, menu, methods, tables, staff, settings, can
   );
 }
 
-function ActionRow({ icon: Icon, label, value, onClick, disabled, danger }: { icon: typeof Users; label: string; value?: string; onClick: () => void; disabled?: boolean; danger?: boolean }) {
+function ActionRow({ label, value, onClick, disabled, danger }: { icon?: unknown; label: string; value?: string; onClick: () => void; disabled?: boolean; danger?: boolean }) {
   return (
-    <button onClick={onClick} disabled={disabled} className={cn("w-full flex items-center gap-3 px-1 py-3 text-left disabled:opacity-40", danger ? "text-error" : "text-text-primary")}>
-      <Icon className="w-5 h-5 shrink-0" />
+    <button onClick={onClick} disabled={disabled} className={cn("w-full flex items-center gap-3 px-1 py-3.5 text-left disabled:opacity-40", danger ? "text-error" : "text-text-primary")}>
       <span className="flex-1 text-sm font-medium">{label}</span>
       {value && <span className="text-sm text-text-muted truncate max-w-[45%]">{value}</span>}
     </button>
@@ -399,7 +416,7 @@ function ItemSheet({ item, guests, active, canEdit, onClose, onSave, onVoid }: {
             <Select label="Comensal" value={seat ? String(seat) : ""} onChange={(e) => setSeat(e.target.value ? Number(e.target.value) : null)} placeholder="Compartido" options={Array.from({ length: guests }, (_, i) => ({ value: String(i + 1), label: `Comensal ${i + 1}` }))} />
           )}
           <div className="flex gap-2 pt-1">
-            <Button variant="danger-outline" onClick={() => onVoid()} disabled={!canEdit} icon={<Ban className="w-4 h-4" />}>Quitar</Button>
+            <Button variant="danger-outline" onClick={() => onVoid()} disabled={!canEdit}>Quitar</Button>
             <Button className="flex-1" onClick={() => onSave({ notes: notes.trim() || null, course, seat })} disabled={!canEdit}>Guardar</Button>
           </div>
         </div>
@@ -412,7 +429,7 @@ function ItemSheet({ item, guests, active, canEdit, onClose, onSave, onVoid }: {
             ))}
           </div>
           <Input label="Motivo" value={reason} onChange={(e) => setReason(e.target.value)} placeholder="Escribí o elegí uno" />
-          <Button variant="danger" fullWidth disabled={!reason.trim() || !canEdit} onClick={() => onVoid(reason.trim())} icon={<Ban className="w-4 h-4" />}>Anular {formatQty(item.quantity)}× {item.name}</Button>
+          <Button variant="danger" fullWidth disabled={!reason.trim() || !canEdit} onClick={() => onVoid(reason.trim())}>Anular {formatQty(item.quantity)}× {item.name}</Button>
         </div>
       )}
     </Sheet>
@@ -506,11 +523,11 @@ function DeliverySheet({ order, staff, canDelivery, onClose, run }: { order: Ord
       }
     >
       <div className="space-y-3">
-        <Input label="Nombre" icon={<UserRound />} value={name} onChange={(e) => setName(e.target.value)} />
-        <Input label="Teléfono" icon={<Phone />} value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Input label="Nombre" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} />
         {order.type === "DELIVERY" && (
           <>
-            <Input label="Dirección" icon={<MapPin />} value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Input label="Dirección" value={address} onChange={(e) => setAddress(e.target.value)} />
             <div>
               <p className="text-sm font-medium mb-1.5">Costo de envío</p>
               <CurrencyInput value={fee} onChange={setFee} />

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChefHat, Plus, Printer, RotateCcw, Trash2, Monitor } from "lucide-react";
 import { Badge, Button, Input, Select, Sheet } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -31,18 +30,18 @@ export function StationsSettings({ stations, failed }: { stations: St[]; failed:
 
   return (
     <PageContainer width="default">
-      <PageHeader title="Estaciones e impresoras" back={{ href: "/configuracion", label: "Configuración" }} action={<Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setEdit({ name: "", color: "accent", kdsEnabled: true, printerEnabled: false, printerHost: "", printerPort: 9100, printerWidth: 42, printerCopies: 1 })}>Nueva estación</Button>} />
+      <PageHeader title="Estaciones e impresoras" back={{ href: "/configuracion", label: "Configuración" }} action={<Button size="sm" onClick={() => setEdit({ name: "", color: "accent", kdsEnabled: true, printerEnabled: false, printerHost: "", printerPort: 9100, printerWidth: 42, printerCopies: 1 })}>Nueva estación</Button>} />
       <p className="text-sm text-text-secondary mb-3">Cada estación recibe sus comandas en una pantalla (KDS), en una comandera térmica de red, o en las dos. Si la impresora falla, la comanda no se pierde: se reintenta sola y la pantalla la sigue mostrando.</p>
       <div className="rounded-2xl border border-border bg-surface divide-y divide-border">
         {stations.map((s) => (
           <button key={s.id} onClick={() => setEdit(s)} className="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-surface-secondary">
-            <span className="w-9 h-9 rounded-xl flex items-center justify-center text-white" style={{ background: solidColor(s.color) }}><ChefHat className="w-4 h-4" /></span>
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: solidColor(s.color) }} />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-text-primary">{s.name}</p>
               <p className="text-xs text-text-muted">{s.printerEnabled && s.printerHost ? `Comandera ${s.printerHost}:${s.printerPort}` : "Sin comandera"}</p>
             </div>
-            {s.kdsEnabled && <Badge tone="info"><Monitor className="w-3 h-3" /> Pantalla</Badge>}
-            {s.printerEnabled && <Badge tone="accent"><Printer className="w-3 h-3" /> Impresora</Badge>}
+            {s.kdsEnabled && <Badge tone="info">Pantalla</Badge>}
+            {s.printerEnabled && <Badge tone="accent">Comandera</Badge>}
           </button>
         ))}
       </div>
@@ -56,7 +55,7 @@ export function StationsSettings({ stations, failed }: { stations: St[]; failed:
                   <p className="text-sm text-text-primary">{f.title}</p>
                   <p className="text-xs text-text-muted">{formatDate(f.createdAt)} · {f.attempts} intentos · {f.lastError ?? "pendiente"}</p>
                 </div>
-                <Button size="sm" variant="outline" icon={<RotateCcw className="w-4 h-4" />} onClick={() => retry(f.id)}>Reintentar</Button>
+                <Button size="sm" variant="outline" onClick={() => retry(f.id)}>Reintentar</Button>
               </div>
             ))}
           </div>
@@ -108,7 +107,7 @@ function StationSheet({ station, onClose }: { station: St; onClose: () => void }
 
   return (
     <Sheet open onClose={onClose} title={s.id ? s.name : "Nueva estación"} maxWidth="max-w-lg"
-      footer={<div className="flex gap-2">{s.id && <Button variant="danger-outline" icon={<Trash2 className="w-4 h-4" />} onClick={remove}>Quitar</Button>}<Button className="flex-1" loading={busy} disabled={!s.name.trim()} onClick={save}>Guardar</Button></div>}
+      footer={<div className="flex gap-2">{s.id && <Button variant="danger-outline" onClick={remove}>Quitar</Button>}<Button className="flex-1" loading={busy} disabled={!s.name.trim()} onClick={save}>Guardar</Button></div>}
     >
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
@@ -127,7 +126,7 @@ function StationSheet({ station, onClose }: { station: St; onClose: () => void }
               <Select label="Papel" value={String(s.printerWidth)} onChange={(e) => set("printerWidth", Number(e.target.value))} options={[{ value: "42", label: "80 mm (42)" }, { value: "48", label: "80 mm (48)" }, { value: "32", label: "58 mm (32)" }]} />
               <Select label="Copias" value={String(s.printerCopies)} onChange={(e) => set("printerCopies", Number(e.target.value))} options={[1, 2, 3].map((n) => ({ value: String(n), label: String(n) }))} />
             </div>
-            {s.id && <Button variant="outline" size="sm" icon={<Printer className="w-4 h-4" />} onClick={test} disabled={!s.printerHost}>Guardar e imprimir prueba</Button>}
+            {s.id && <Button variant="outline" size="sm" onClick={test} disabled={!s.printerHost}>Guardar e imprimir prueba</Button>}
           </>
         )}
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Banknote, CreditCard, Landmark, QrCode, BookUser, CircleDollarSign, Check, Users, ListChecks, Divide, UserRound } from "lucide-react";
+import { Check } from "lucide-react";
 import { Button, CurrencyInput, Sheet } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { api } from "@/lib/client/api";
@@ -12,7 +12,6 @@ import { formatCurrency, formatQty, round2, cn } from "@/lib/utils";
 
 export type PayMethod = { id: string; name: string; kind: string; adjustPct: number };
 
-const KIND_ICON: Record<string, typeof Banknote> = { CASH: Banknote, CARD: CreditCard, TRANSFER: Landmark, QR: QrCode, ACCOUNT: BookUser, OTHER: CircleDollarSign };
 
 type Mode = "all" | "even" | "items" | "seat";
 
@@ -50,12 +49,38 @@ export function PaymentSheet({ order, methods, suggestedTipPct, onClose, onPaid 
     return round2(Math.min(due, base * ratio));
   }, [selectedItems, order.items, ratio, due]);
 
+  // Partes iguales sobre el total de la cuenta: así se ve cuántas ya pagaron.
+  function sharesOf(n: number) {
+    return splitEvenly(order.total, n);
+  }
+  const paidParts = (() => {
+    const shares = sharesOf(parts);
+    let acc = 0;
+    let k = 0;
+    for (const v of shares) {
+      if (acc + v <= order.paidAmount + 0.01) {
+        acc += v;
+        k++;
+      } else break;
+    }
+    return k;
+  })();
+  function nextShare(n: number) {
+    const shares = sharesOf(n);
+    let acc = 0;
+    for (const v of shares) {
+      if (acc + v <= order.paidAmount + 0.01) acc += v;
+      else return Math.min(due, v);
+    }
+    return due;
+  }
+
   function pickMode(m: Mode) {
     setMode(m);
     setSelectedItems({});
     setSeat(null);
     if (m === "all") setAmount(due);
-    if (m === "even") setAmount(splitEvenly(due, parts)[0] ?? due);
+    if (m === "even") setAmount(nextShare(parts));
     if (m === "items" || m === "seat") setAmount(0);
   }
 
@@ -112,7 +137,7 @@ export function PaymentSheet({ order, methods, suggestedTipPct, onClose, onPaid 
         setTendered(null);
         setTipPct(null);
         setTipCustom(null);
-        setAmount(mode === "even" ? Math.min(left, splitEvenly(due, parts)[0] ?? left) : mode === "all" ? left : 0);
+        setAmount(mode === "even" ? Math.min(left, sharesOf(parts)[Math.min(parts - 1, paidParts + 1)] ?? left) : mode === "all" ? left : 0);
       }
     } catch (e) {
       toast.error((e as Error).message);
@@ -123,8 +148,10 @@ export function PaymentSheet({ order, methods, suggestedTipPct, onClose, onPaid 
 
   const quickBills = useMemo(() => {
     const opts = new Set<number>([charge]);
-    for (const b of [1000, 2000, 5000, 10000, 20000]) opts.add(Math.ceil(charge / b) * b);
-    return [...opts].filter((n) => n >= charge).sort((a, b) => a - b).slice(0, 4);
+    // Los billetes que de verdad entrega la gente: redondeos a 1.000, 2.000, 10.000 y 20.000.
+    for (const b of [1000, 2000, 10000, 20000]) opts.add(Math.ceil(charge / b) * b);
+    opts.add(Math.ceil(charge / 10000) * 10000 + 10000);
+    return [...opts].filter((n) => n >= charge).sort((a, b) => a - b).slice(0, 5);
   }, [charge]);
 
   return (
@@ -132,39 +159,73 @@ export function PaymentSheet({ order, methods, suggestedTipPct, onClose, onPaid 
       open
       onClose={onClose}
       title="Cobrar"
-      description={`Total ${formatCurrency(order.total)}${order.paidAmount > 0 ? ` · cobrado ${formatCurrency(order.paidAmount)}` : ""} · falta ${formatCurrency(due)}`}
       maxWidth="max-w-xl"
       footer={
-        <Button fullWidth size="lg" loading={busy} disabled={invalid} onClick={pay} icon={<Check className="w-5 h-5" />}>
+        <Button fullWidth size="lg" loading={busy} disabled={invalid} onClick={pay}>
           {method ? `Cobrar ${formatCurrency(charge)} con ${method.name}` : "Elegí cómo paga"}
         </Button>
       }
     >
       <div className="space-y-5">
+        {/* Lo único que importa de un vistazo: cuánto falta. */}
+        <div className="rounded-2xl bg-surface-secondary p-4">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Falta cobrar</p>
+              <p className="text-3xl font-bold tabular-nums text-text-primary leading-tight">{formatCurrency(due)}</p>
+            </div>
+            <p className="text-sm text-text-secondary text-right tabular-nums">de {formatCurrency(order.total)}</p>
+          </div>
+          {order.paidAmount > 0 && (
+            <>
+              <div className="mt-3 h-2 rounded-full bg-surface overflow-hidden">
+                <div className="h-full rounded-full bg-success" style={{ width: `${Math.min(100, (order.paidAmount / order.total) * 100)}%` }} />
+              </div>
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {order.payments.filter((p) => p.amount > 0).map((p) => (
+                  <span key={p.id} className="text-xs font-medium px-2 py-0.5 rounded-full bg-success-light text-success-strong tabular-nums">{p.method} {formatCurrency(p.amount)}</span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <div className="grid grid-cols-4 gap-1 rounded-2xl bg-surface-secondary p-1">
           {([
-            ["all", "Todo", CircleDollarSign],
-            ["even", "Partes iguales", Divide],
-            ["items", "Por ítems", ListChecks],
-            ["seat", "Por persona", UserRound],
-          ] as const).map(([m, label, Icon]) => (
-            <button key={m} onClick={() => pickMode(m)} className={cn("flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-xs font-semibold", mode === m ? "bg-surface text-accent shadow-sm" : "text-text-secondary")}>
-              <Icon className="w-4 h-4" /> {label}
+            ["all", "Todo"],
+            ["even", "Partes iguales"],
+            ["items", "Por ítems"],
+            ["seat", "Por persona"],
+          ] as const).map(([m, label]) => (
+            <button key={m} onClick={() => pickMode(m)} className={cn("flex items-center justify-center rounded-xl min-h-10 px-1 text-xs sm:text-sm font-semibold text-center leading-tight", mode === m ? "bg-surface text-accent shadow-sm" : "text-text-secondary")}>
+              {label}
             </button>
           ))}
         </div>
 
         {mode === "even" && (
-          <div className="flex items-center justify-between gap-3 rounded-2xl border border-border p-3">
-            <span className="text-sm text-text-secondary flex items-center gap-2"><Users className="w-4 h-4" /> Dividir en</span>
-            <div className="flex items-center gap-2">
-              {[2, 3, 4, 5, 6].map((n) => (
-                <button key={n} onClick={() => { setParts(n); setAmount(splitEvenly(due, n)[0] ?? due); }} className={cn("w-10 h-10 rounded-xl border text-sm font-semibold tabular-nums", parts === n ? "bg-accent text-white border-accent" : "border-border")}>
-                  {n}
-                </button>
-              ))}
+          <div className="rounded-2xl border border-border p-3 space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-medium text-text-primary">Dividir en</span>
+              <div className="flex items-center gap-1.5">
+                {[2, 3, 4, 5, 6, 8].map((n) => (
+                  <button key={n} onClick={() => { setParts(n); setAmount(nextShare(n)); }} className={cn("w-10 h-10 rounded-xl border text-sm font-semibold tabular-nums", parts === n ? "bg-accent text-white border-accent" : "border-border")}>
+                    {n}
+                  </button>
+                ))}
+              </div>
             </div>
-            <span className="text-sm font-semibold tabular-nums">{formatCurrency(splitEvenly(due, parts)[0] ?? 0)} c/u</span>
+            <div className="grid grid-cols-4 gap-1.5">
+              {splitEvenly(order.total, parts).map((v, i) => {
+                const paid = i < paidParts;
+                const current = i === paidParts;
+                return (
+                  <div key={i} className={cn("rounded-xl px-2 py-1.5 text-center border", paid ? "bg-success-light border-success-border" : current ? "border-accent bg-accent-subtle" : "border-border")}>
+                    <p className={cn("text-[11px] font-semibold", paid ? "text-success-strong" : current ? "text-accent" : "text-text-muted")}>{paid ? "Pagó" : `Parte ${i + 1}`}</p>
+                    <p className="text-sm font-semibold tabular-nums">{formatCurrency(v)}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -201,10 +262,8 @@ export function PaymentSheet({ order, methods, suggestedTipPct, onClose, onPaid 
           <p className="text-sm font-semibold text-text-primary mb-2">¿Cómo paga?</p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {methods.map((m) => {
-              const Icon = KIND_ICON[m.kind] ?? CircleDollarSign;
               return (
-                <button key={m.id} onClick={() => setMethodId(m.id)} className={cn("min-h-14 px-3 py-2 rounded-2xl border text-left flex items-center gap-2.5 transition-colors", methodId === m.id ? "border-accent bg-accent-light text-accent" : "border-border text-text-primary hover:bg-surface-secondary")}>
-                  <Icon className="w-5 h-5 shrink-0" />
+                <button key={m.id} onClick={() => setMethodId(m.id)} className={cn("min-h-14 px-3 py-2 rounded-2xl border text-left flex items-center transition-colors", methodId === m.id ? "border-accent bg-accent-light text-accent ring-1 ring-accent" : "border-border text-text-primary hover:bg-surface-secondary")}>
                   <span className="text-sm font-semibold leading-tight">
                     {m.name}
                     {m.adjustPct !== 0 && <span className="block text-[11px] font-medium text-text-muted">{m.adjustPct > 0 ? "+" : ""}{m.adjustPct} %</span>}

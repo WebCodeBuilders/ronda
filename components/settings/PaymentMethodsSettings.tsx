@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus } from "lucide-react";
 import { Badge, Button, Input, Select, Sheet } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -35,7 +34,7 @@ export function PaymentMethodsSettings({ methods }: { methods: M[] }) {
   }
   return (
     <PageContainer width="default">
-      <PageHeader title="Medios de pago" back={{ href: "/configuracion", label: "Configuración" }} action={<Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setEdit({ name: "", kind: "CARD", adjustPct: 0, active: true })}>Nuevo</Button>} />
+      <PageHeader title="Medios de pago" back={{ href: "/configuracion", label: "Configuración" }} action={<Button size="sm" onClick={() => setEdit({ name: "", kind: "CARD", adjustPct: 0, active: true })}>Nuevo</Button>} />
       <p className="text-sm text-text-secondary mb-3">Lo que el cajero ve al cobrar. El recargo (o descuento) se suma aparte, así la venta del plato no cambia según cómo se pague.</p>
       <div className="rounded-2xl border border-border bg-surface divide-y divide-border">
         {methods.map((m) => (

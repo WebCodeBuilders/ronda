@@ -40,10 +40,11 @@ export const TABLE_STATE_LABEL: Record<TableState, string> = {
 /** Colores por estado: fondo, borde y texto, siempre de tokens. */
 export const TABLE_STATE_STYLE: Record<TableState, { bg: string; border: string; text: string; dot: string }> = {
   FREE: { bg: "var(--surface)", border: "var(--border-strong)", text: "var(--text-secondary)", dot: "var(--text-muted)" },
-  RESERVED: { bg: "var(--violet-light)", border: "var(--violet)", text: "var(--violet-strong)", dot: "var(--violet)" },
+  RESERVED: { bg: "var(--info-subtle)", border: "var(--info)", text: "var(--info-strong)", dot: "var(--info)" },
   OCCUPIED: { bg: "var(--accent-light)", border: "var(--accent)", text: "var(--accent)", dot: "var(--accent)" },
   BILLING: { bg: "var(--warning-light)", border: "var(--warning)", text: "var(--warning-strong)", dot: "var(--warning)" },
   LATE: { bg: "var(--error-light)", border: "var(--error)", text: "var(--error-strong)", dot: "var(--error)" },
   READY: { bg: "var(--success-light)", border: "var(--success)", text: "var(--success-strong)", dot: "var(--success)" },
-  CALLING: { bg: "var(--error-light)", border: "var(--error)", text: "var(--error-strong)", dot: "var(--error)" },
+  // Un cliente que llama no es una demora: otro color, para que el mozo distinga de lejos.
+  CALLING: { bg: "var(--violet-light)", border: "var(--violet)", text: "var(--violet-strong)", dot: "var(--violet)" },
 };

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, PackagePlus, Trash, ClipboardCheck, Pencil } from "lucide-react";
 import { Badge, Button, CurrencyInput, Input, Select, Sheet, tableCls } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -22,9 +21,31 @@ export function StockView({ ingredients, movements }: { ingredients: I[]; moveme
   const value = ingredients.reduce((s, i) => s + Math.max(0, i.stock) * i.cost, 0);
   return (
     <PageContainer width="wide">
-      <PageHeader title="Insumos" meta={<span className="text-sm text-text-secondary">Valor en stock {formatCurrency(value)}</span>} action={<Button size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setEdit({ unit: "u", minStock: 0, cost: 0 })}>Nuevo insumo</Button>} />
+      <PageHeader title="Insumos" meta={<span className="text-sm text-text-secondary">Valor en stock {formatCurrency(value)}</span>} action={<Button size="sm" onClick={() => setEdit({ unit: "u", minStock: 0, cost: 0 })}>Nuevo insumo</Button>} />
       {low.length > 0 && <p className="mb-3 rounded-2xl bg-warning-subtle border border-warning-border px-4 py-2.5 text-sm text-warning-strong">{low.length} {low.length === 1 ? "insumo está" : "insumos están"} en el mínimo o por debajo: {low.map((l) => l.name).join(", ")}.</p>}
-      <div className={tableCls.frame}>
+      {/* Celular: tarjeta con barra de stock contra el mínimo y un botón de movimiento. */}
+      <div className="md:hidden space-y-2">
+        {ingredients.map((i) => {
+          const pct = Math.min(100, i.minStock > 0 ? (i.stock / (i.minStock * 3)) * 100 : 100);
+          const tone = i.stock <= 0 ? "var(--error)" : i.stock <= i.minStock ? "var(--warning)" : "var(--success)";
+          return (
+            <div key={i.id} className="rounded-2xl border border-border bg-surface p-3">
+              <div className="flex items-baseline justify-between gap-3">
+                <button onClick={() => setEdit(i)} className="text-[15px] font-semibold text-text-primary text-left">{i.name}</button>
+                <span className="text-sm font-bold tabular-nums" style={{ color: tone }}>{formatQty(i.stock)} {i.unit}</span>
+              </div>
+              <div className="mt-2 h-1.5 rounded-full bg-surface-secondary overflow-hidden"><div className="h-full rounded-full" style={{ width: `${Math.max(3, pct)}%`, background: tone }} /></div>
+              <p className="text-xs text-text-muted mt-1.5">Mínimo {formatQty(i.minStock)} {i.unit}{i.weekUse > 0 ? ` · alcanza para ~${Math.max(0, Math.floor(i.stock / (i.weekUse / 7)))} días` : ""}</p>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                <Button size="sm" variant="outline" onClick={() => setMove({ i, kind: "PURCHASE" })}>Compra</Button>
+                <Button size="sm" variant="outline" onClick={() => setMove({ i, kind: "WASTE" })}>Merma</Button>
+                <Button size="sm" variant="outline" onClick={() => setMove({ i, kind: "ADJUST" })}>Conteo</Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className={cn(tableCls.frame, "hidden md:block")}>
         <div className={tableCls.scroll}>
           <table className={tableCls.table}>
             <thead className={tableCls.thead}><tr><th className={tableCls.th}>Insumo</th><th className={cn(tableCls.th, tableCls.thRight)}>Stock</th><th className={cn(tableCls.th, tableCls.thRight, "hidden sm:table-cell")}>Mínimo</th><th className={cn(tableCls.th, tableCls.thRight, "hidden md:table-cell")}>Uso 7 días</th><th className={cn(tableCls.th, tableCls.thRight, "hidden md:table-cell")}>Costo</th><th className={tableCls.th} /></tr></thead>
@@ -33,17 +54,17 @@ export function StockView({ ingredients, movements }: { ingredients: I[]; moveme
                 const days = i.weekUse > 0 ? i.stock / (i.weekUse / 7) : null;
                 return (
                   <tr key={i.id} className={tableCls.tr}>
-                    <td className={tableCls.td}>{i.name}<div className={tableCls.sub}>{i.recipes ? `En ${i.recipes} recetas` : "Sin recetas"}{days !== null ? ` · alcanza para ~${Math.max(0, Math.floor(days))} días` : ""}</div></td>
+                    <td className={tableCls.td}>{i.name}<div className={tableCls.sub}>{i.recipes ? `En ${i.recipes} ${i.recipes === 1 ? "receta" : "recetas"}` : "Sin recetas"}{days !== null ? ` · alcanza para ~${Math.max(0, Math.floor(days))} días` : ""}</div></td>
                     <td className={cn(tableCls.td, tableCls.tdRight, "font-semibold", i.stock <= 0 ? "text-error" : i.stock <= i.minStock ? "text-warning" : "text-success")}>{formatQty(i.stock)} {i.unit}</td>
                     <td className={cn(tableCls.td, tableCls.tdRight, tableCls.tdMuted, "hidden sm:table-cell")}>{formatQty(i.minStock)}</td>
                     <td className={cn(tableCls.td, tableCls.tdRight, tableCls.tdMuted, "hidden md:table-cell")}>{formatQty(i.weekUse)}</td>
                     <td className={cn(tableCls.td, tableCls.tdRight, tableCls.tdMuted, "hidden md:table-cell")}>{formatCurrency(i.cost)}</td>
                     <td className={cn(tableCls.td, "whitespace-nowrap text-right")}>
                       <div className="inline-flex gap-1">
-                        <Button size="sm" variant="outline" icon={<PackagePlus className="w-4 h-4" />} onClick={() => setMove({ i, kind: "PURCHASE" })}>Compra</Button>
-                        <button onClick={() => setMove({ i, kind: "WASTE" })} className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-text-secondary hover:bg-surface-secondary" aria-label="Merma" title="Merma"><Trash className="w-4 h-4" /></button>
-                        <button onClick={() => setMove({ i, kind: "ADJUST" })} className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-text-secondary hover:bg-surface-secondary" aria-label="Conteo" title="Conteo físico"><ClipboardCheck className="w-4 h-4" /></button>
-                        <button onClick={() => setEdit(i)} className="w-9 h-9 rounded-xl border border-border flex items-center justify-center text-text-secondary hover:bg-surface-secondary" aria-label="Editar"><Pencil className="w-4 h-4" /></button>
+                        <Button size="sm" variant="outline" onClick={() => setMove({ i, kind: "PURCHASE" })}>Compra</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setMove({ i, kind: "WASTE" })}>Merma</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setMove({ i, kind: "ADJUST" })}>Conteo</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setEdit(i)}>Editar</Button>
                       </div>
                     </td>
                   </tr>

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Plus, RotateCw, Trash2, Pencil, QrCode } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { Button, Input, Select } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -158,8 +158,8 @@ export function SalonEditor({ data, areaId, onAreaChange, onExit }: { data: Salo
         description="Arrastrá las mesas. Los cambios se guardan solos y se ven en todas las terminales."
         action={
           <>
-            <Button variant="outline" size="sm" icon={<QrCode className="w-4 h-4" />} onClick={() => window.open("/configuracion/qr", "_blank")}>QR de mesas</Button>
-            <Button size="sm" icon={<Check className="w-4 h-4" />} onClick={onExit}>Listo</Button>
+            <Button variant="outline" size="sm" onClick={() => window.open("/configuracion/qr", "_blank")}>QR de mesas</Button>
+            <Button size="sm" onClick={onExit}>Listo</Button>
           </>
         }
       />
@@ -170,7 +170,7 @@ export function SalonEditor({ data, areaId, onAreaChange, onExit }: { data: Salo
           </button>
         ))}
         <button onClick={() => setPrompt("newArea")} className="h-10 px-4 rounded-xl border border-dashed border-border-strong text-sm font-semibold text-accent flex items-center gap-1.5">
-          <Plus className="w-4 h-4" /> Sector
+          Nuevo sector
         </button>
       </div>
 
@@ -178,7 +178,7 @@ export function SalonEditor({ data, areaId, onAreaChange, onExit }: { data: Salo
         <div className="space-y-3 min-w-0">
           <div className="flex flex-wrap gap-2">
             {Object.keys(PRESETS).map((s) => (
-              <Button key={s} variant="outline" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => addTable(s)}>
+              <Button key={s} variant="outline" size="sm" onClick={() => addTable(s)}>
                 {TABLE_SHAPE_LABEL[s]}
               </Button>
             ))}
@@ -235,8 +235,8 @@ export function SalonEditor({ data, areaId, onAreaChange, onExit }: { data: Salo
               </div>
               <Select label="Sector" value={selected.areaId} onChange={(e) => update(selected.id, { areaId: e.target.value })} options={data.areas.map((a) => ({ value: a.id, label: a.name }))} />
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" icon={<RotateCw className="w-4 h-4" />} onClick={() => update(selected.id, { rotation: ((selected.rotation ?? 0) + 45) % 360 })}>Girar</Button>
-                <Button variant="danger-outline" size="sm" icon={<Trash2 className="w-4 h-4" />} onClick={() => setConfirmDelete("table")}>Quitar</Button>
+                <Button variant="outline" size="sm" onClick={() => update(selected.id, { rotation: ((selected.rotation ?? 0) + 45) % 360 })}>Girar</Button>
+                <Button variant="danger-outline" size="sm" onClick={() => setConfirmDelete("table")}>Quitar</Button>
               </div>
             </div>
           ) : (

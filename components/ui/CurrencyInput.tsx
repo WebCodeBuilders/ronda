@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import { inputClasses } from "./Input";
 
 interface Props {
   /** Valor numérico actual (o null/"" si vacío). */
@@ -78,7 +80,8 @@ export function CurrencyInput({
         setRaw(s);
         onChange(toNumber(s));
       }}
-      className={className}
+      // Mismo aspecto que cualquier campo del sistema; lo que venga en className lo ajusta.
+      className={cn(inputClasses, "min-h-11 lg:min-h-0 tabular-nums", className)}
       style={style}
     />
   );

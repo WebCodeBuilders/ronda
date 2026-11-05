@@ -26,10 +26,9 @@ export default async function SettingsPage() {
       <div className="rounded-2xl border border-border bg-surface divide-y divide-border sm:divide-y-0 sm:border-0 sm:bg-transparent sm:grid sm:grid-cols-2 sm:gap-3">
         {items.map((i) => (
           <Link key={i.href} href={i.href} className="flex items-center gap-3 px-4 py-3 sm:rounded-2xl sm:border sm:border-border sm:bg-surface sm:p-4 hover:bg-surface-secondary transition-colors">
-            <span className="w-10 h-10 rounded-xl bg-accent-light text-accent flex items-center justify-center shrink-0"><i.icon className="w-5 h-5" /></span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-text-primary">{i.title}</p>
-              <p className="text-xs text-text-secondary leading-snug hidden sm:block">{i.desc}</p>
+              <p className="text-xs text-text-secondary leading-snug mt-0.5">{i.desc}</p>
             </div>
             <ChevronRight className="w-4 h-4 text-text-muted shrink-0" />
           </Link>

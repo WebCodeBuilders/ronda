@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { pageUser } from "@/lib/auth/guard";
 import { publicUrl } from "@/lib/public-url";
 import { QrSheet } from "@/components/settings/QrSheet";
+import { naturalCompare } from "@/lib/colors";
 
 export const metadata = { title: "QR de las mesas · ronda" };
 
@@ -13,6 +14,8 @@ export default async function Page() {
     prisma.organization.findUniqueOrThrow({ where: { id: user.organizationId }, select: { name: true } }),
     prisma.diningTable.findMany({ where: { organizationId: user.organizationId, active: true }, include: { area: { select: { name: true, sort: true } } }, orderBy: [{ area: { sort: "asc" } }, { name: "asc" }] }),
   ]);
+  // Agrupadas por sector y en orden natural: 1, 2, 10.
+  tables.sort((a, b) => a.area.sort - b.area.sort || naturalCompare(a.name, b.name));
   const items = await Promise.all(
     tables.map(async (t) => {
       const url = `${base}/m/${t.qrToken}`;

@@ -15,5 +15,14 @@ export default async function PinPage({ searchParams }: { searchParams: Promise<
     orderBy: { name: "asc" },
   });
   const org = await prisma.organization.findUniqueOrThrow({ where: { id: device.organizationId }, select: { name: true } });
+  // Primero quienes usan este equipo: en la tablet del mozo, los mozos; en la caja, quien cobra.
+  const rank: Record<string, string[]> = {
+    WAITER: ["WAITER", "MANAGER", "CASHIER", "OWNER", "KITCHEN", "DELIVERY"],
+    KDS: ["KITCHEN", "MANAGER", "OWNER", "CASHIER", "WAITER", "DELIVERY"],
+    POS: ["CASHIER", "MANAGER", "OWNER", "WAITER", "DELIVERY", "KITCHEN"],
+    DISPLAY: ["CASHIER", "MANAGER", "OWNER", "WAITER", "KITCHEN", "DELIVERY"],
+  };
+  const order = rank[device.kind] ?? rank.POS!;
+  users.sort((a, b) => order.indexOf(a.role) - order.indexOf(b.role) || a.name.localeCompare(b.name, "es"));
   return <PinPad users={users} deviceName={device.name} orgName={org.name} next={next ?? null} />;
 }

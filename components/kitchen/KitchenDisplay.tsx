@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Ban, Check, ChefHat, Flame, ListOrdered, Maximize, Printer, Undo2, Volume2, VolumeX } from "lucide-react";
+import { ArrowLeft, Check, Flame, Maximize, Printer, Volume2, VolumeX } from "lucide-react";
 import { LogoMark } from "@/components/brand/Logo";
 import { LiveIndicator } from "@/components/layout/LiveIndicator";
 import { Sheet, Switch } from "@/components/ui";
@@ -113,44 +113,47 @@ export function KitchenDisplay({ data, stationId, deviceName, userName, products
 
   return (
     <div className="min-h-dvh flex flex-col bg-background">
-      <header className="sticky top-0 z-30 flex flex-wrap items-center gap-2 px-3 py-2 bg-surface border-b border-border">
-        {userName ? (
-          <Link href="/" className="tap-44 flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface-secondary" aria-label="Volver"><ArrowLeft className="w-5 h-5" /></Link>
-        ) : (
-          <LogoMark className="w-7 h-7 text-accent ml-1" />
-        )}
-        <div className="mr-2">
-          <p className="text-base font-bold tracking-tight text-text-primary leading-tight flex items-center gap-1.5"><ChefHat className="w-4 h-4" /> {stationName}</p>
-          <p className="text-xs text-text-muted leading-tight">{deviceName ?? userName} · {now ? formatTime(new Date(now)) : ""}</p>
-        </div>
-        <div className="snap-x-chips gap-1.5 flex-1 min-w-0">
-          <StationTab href="/cocina?estacion=todas" active={!stationId} label="Todas" />
-          {data.stations.map((s) => (
-            <StationTab key={s.id} href={`/cocina?estacion=${s.id}`} active={stationId === s.id} label={s.name} color={s.color} />
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Counter label="En curso" value={active.length} />
-          {late > 0 && <Counter label="Demoradas" value={late} tone="error" />}
-          <button onClick={() => setShowReady((v) => !v)} className={cn("h-10 px-3 rounded-xl border text-sm font-semibold", showReady ? "bg-success text-white border-success" : "border-border text-text-secondary hover:bg-surface-secondary")}>
-            Listas ({ready.length})
-          </button>
-          <button onClick={() => setShowAllDay(true)} className="h-10 px-3 rounded-xl border border-border text-sm font-semibold text-text-secondary hover:bg-surface-secondary flex items-center gap-1.5"><ListOrdered className="w-4 h-4" /> Totales</button>
-          <button onClick={() => setShow86(true)} className="h-10 px-3 rounded-xl border border-border text-sm font-semibold text-text-secondary hover:bg-surface-secondary flex items-center gap-1.5">
-            <Ban className="w-4 h-4" /> Sin stock{unavailable ? ` (${unavailable})` : ""}
-          </button>
+      <header className="sticky top-0 z-30 bg-surface border-b border-border">
+        {/* Fila 1: dónde estoy, la hora y los controles del equipo. */}
+        <div className="flex items-center gap-2 px-3 pt-2">
+          {userName ? (
+            <Link href="/" className="tap-44 flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface-secondary" aria-label="Volver"><ArrowLeft className="w-5 h-5" /></Link>
+          ) : (
+            <LogoMark className="w-7 h-7 text-accent ml-1" />
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-base font-bold tracking-tight text-text-primary leading-tight truncate">{stationName}</p>
+            <p className="text-xs text-text-muted leading-tight truncate">{deviceName ?? userName}</p>
+          </div>
+          <span className="text-lg font-bold tabular-nums text-text-primary">{now ? formatTime(new Date(now)) : ""}</span>
           <button onClick={() => setSound((s) => !s)} className="tap-44 flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface-secondary" aria-label={sound ? "Silenciar" : "Activar sonido"}>
             {sound ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
           </button>
           <button onClick={() => document.documentElement.requestFullscreen?.().catch(() => {})} className="tap-44 hidden sm:flex items-center justify-center rounded-xl text-text-secondary hover:bg-surface-secondary" aria-label="Pantalla completa"><Maximize className="w-5 h-5" /></button>
           <LiveIndicator />
         </div>
+        {/* Fila 2: estaciones y lo que hay en curso; se desliza si no entra. */}
+        <div className="snap-x-chips gap-1.5 px-3 py-2">
+          <StationTab href="/cocina?estacion=todas" active={!stationId} label="Todas" />
+          {data.stations.map((s) => (
+            <StationTab key={s.id} href={`/cocina?estacion=${s.id}`} active={stationId === s.id} label={s.name} color={s.color} />
+          ))}
+          <span className="w-px h-6 bg-border self-center mx-1" />
+          <Counter label="En curso" value={active.length} />
+          {late > 0 && <Counter label="Demoradas" value={late} tone="error" />}
+          <button onClick={() => setShowReady((v) => !v)} className={cn("h-10 px-3 rounded-xl border text-sm font-semibold whitespace-nowrap", showReady ? "bg-success text-white border-success" : "border-border text-text-secondary hover:bg-surface-secondary")}>
+            {showReady ? "Ver en curso" : `Listas (${ready.length})`}
+          </button>
+          <button onClick={() => setShowAllDay(true)} className="h-10 px-3 rounded-xl border border-border text-sm font-semibold text-text-secondary hover:bg-surface-secondary whitespace-nowrap">Totales</button>
+          <button onClick={() => setShow86(true)} className="h-10 px-3 rounded-xl border border-border text-sm font-semibold text-text-secondary hover:bg-surface-secondary whitespace-nowrap">
+            Sin stock{unavailable ? ` (${unavailable})` : ""}
+          </button>
+        </div>
       </header>
 
       <main className="flex-1 p-3">
         {list.length === 0 ? (
           <div className="h-[60dvh] flex flex-col items-center justify-center text-center">
-            <div className="w-16 h-16 rounded-2xl bg-success-light text-success-strong flex items-center justify-center mb-4"><Check className="w-8 h-8" /></div>
             <p className="text-lg font-semibold text-text-primary">{showReady ? "No hay comandas listas recientes" : "Todo al día"}</p>
             <p className="text-sm text-text-secondary mt-1">{showReady ? "Acá quedan 30 minutos las que despachaste, por si hay que recuperarlas." : "Las comandas nuevas aparecen solas, con aviso sonoro."}</p>
           </div>
@@ -210,7 +213,7 @@ function StationTab({ href, active, label, color }: { href: string; active: bool
 
 function Counter({ label, value, tone }: { label: string; value: number; tone?: "error" }) {
   return (
-    <span className={cn("h-10 px-3 rounded-xl flex items-center gap-1.5 text-sm", tone === "error" ? "bg-error-light text-error-strong" : "bg-surface-secondary text-text-secondary")}>
+    <span className={cn("h-10 px-3 rounded-xl flex items-center gap-1.5 text-sm whitespace-nowrap", tone === "error" ? "bg-error-light text-error-strong" : "bg-surface-secondary text-text-secondary")}>
       {label} <b className="tabular-nums">{value}</b>
     </span>
   );
@@ -231,12 +234,12 @@ function TicketCard({ t, now, lateMinutes, busy, onAct, onItem, showStation }: {
         <div className="min-w-0">
           <p className="text-xl font-bold leading-tight truncate">{t.label}</p>
           <p className="text-xs opacity-90 leading-tight">
-            #{t.number} · {ORDER_TYPE_LABEL[t.orderType]}{t.waiter ? ` · ${t.waiter}` : ""}{t.orderType === "DINE_IN" ? ` · ${t.guests}p` : ""}{showStation ? ` · ${t.stationName}` : ""}
+            {[t.orderType === "DINE_IN" || t.orderType === "QR" ? null : ORDER_TYPE_LABEL[t.orderType], t.waiter, t.orderType === "DINE_IN" ? `${t.guests} personas` : null, showStation ? t.stationName : null].filter(Boolean).join(" · ")}
           </p>
         </div>
         <div className="text-right shrink-0">
           <p className="text-xl font-bold tabular-nums leading-tight">{ready && t.readyAt ? formatTime(t.readyAt) : mmss(elapsed)}</p>
-          {t.priority && <p className="text-[11px] font-semibold flex items-center gap-1 justify-end"><Flame className="w-3 h-3" /> Prioridad</p>}
+          {t.priority && <p className="text-[11px] font-bold uppercase tracking-wide">Prioridad</p>}
         </div>
       </div>
       {t.notes && <p className="px-3 py-1.5 text-sm font-semibold bg-warning-light text-warning-strong">{t.notes}</p>}
@@ -276,16 +279,13 @@ function TicketCard({ t, now, lateMinutes, busy, onAct, onItem, showStation }: {
         </div>
       )}
       <div className="flex gap-1.5 p-2 border-t border-border">
-        {t.status === "NEW" && (
-          <button onClick={() => onAct(t, "start")} disabled={!!busy} className="flex-1 h-12 rounded-xl bg-accent text-white text-base font-semibold hover:bg-accent-hover disabled:opacity-60">Empezar</button>
-        )}
         {(t.status === "NEW" || t.status === "PREPARING") && (
-          <button onClick={() => onAct(t, "ready")} disabled={!!busy} className="flex-1 h-12 rounded-xl bg-success text-white text-base font-semibold hover:brightness-95 disabled:opacity-60 flex items-center justify-center gap-1.5"><Check className="w-5 h-5" /> Listo</button>
+          <button onClick={() => onAct(t, "ready")} disabled={!!busy} className="flex-1 h-12 rounded-xl bg-success text-white text-base font-semibold hover:brightness-95 disabled:opacity-60">Listo</button>
         )}
         {ready && (
           <>
             <button onClick={() => onAct(t, "done")} disabled={!!busy} className="flex-1 h-12 rounded-xl bg-success text-white text-base font-semibold hover:brightness-95 disabled:opacity-60">Retirado</button>
-            <button onClick={() => onAct(t, "recall")} disabled={!!busy} className="h-12 px-3 rounded-xl border border-border text-sm font-semibold text-text-secondary hover:bg-surface-secondary flex items-center gap-1.5"><Undo2 className="w-4 h-4" /> Volver</button>
+            <button onClick={() => onAct(t, "recall")} disabled={!!busy} className="h-12 px-3 rounded-xl border border-border text-sm font-semibold text-text-secondary hover:bg-surface-secondary flex items-center gap-1.5">Volver a cocina</button>
           </>
         )}
         {!ready && (

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Hand, Minus, Plus, Receipt, ShoppingBag, X, Leaf, Flame } from "lucide-react";
+import { Check, Minus, Plus, X } from "lucide-react";
 import { Button, Sheet, Textarea } from "@/components/ui";
 import { LogoMark } from "@/components/brand/Logo";
 import { useToast } from "@/components/ui/Toast";
@@ -94,7 +94,7 @@ export function QrMenu({ token, orgName, tableName, orderingEnabled, needsApprov
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {p.tags.map((t) => (
                           <span key={t} className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-success-light text-success-strong">
-                            {t === "picante" ? <Flame className="w-3 h-3" /> : <Leaf className="w-3 h-3" />} {t}
+                            {t}
                           </span>
                         ))}
                       </div>
@@ -113,10 +113,10 @@ export function QrMenu({ token, orgName, tableName, orderingEnabled, needsApprov
 
       <div className="fixed bottom-0 inset-x-0 z-30 bg-surface border-t border-border px-4 py-3 pb-safe">
         <div className="max-w-2xl mx-auto flex gap-2">
-          <Button variant="outline" className="flex-1" loading={busy && !showBill && !showCart} onClick={() => post({ action: "call" }, "call")} icon={<Hand className="w-4 h-4" />}>Mozo</Button>
-          <Button variant="outline" className="flex-1" onClick={() => setShowBill(true)} icon={<Receipt className="w-4 h-4" />}>Cuenta</Button>
+          <Button variant="outline" className="flex-1" loading={busy && !showBill && !showCart} onClick={() => post({ action: "call" }, "call")}>Mozo</Button>
+          <Button variant="outline" className="flex-1" onClick={() => setShowBill(true)}>Cuenta</Button>
           {count > 0 && (
-            <Button className="flex-[2]" onClick={() => setShowCart(true)} icon={<ShoppingBag className="w-4 h-4" />}>Ver pedido ({count}) · {formatCurrency(total)}</Button>
+            <Button className="flex-[2]" onClick={() => setShowCart(true)}>Ver pedido ({count}) · {formatCurrency(total)}</Button>
           )}
         </div>
       </div>

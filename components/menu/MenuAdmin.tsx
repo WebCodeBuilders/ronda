@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Percent, Plus, Search, Trash2, X, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronRight, Search, Trash2, X, ArrowUp, ArrowDown } from "lucide-react";
+import { buttonClasses } from "@/components/ui/button-styles";
 import { Badge, Button, Input, Select, Sheet, Switch } from "@/components/ui";
 import { CurrencyInput } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -38,8 +39,8 @@ export function MenuAdmin({ tab, canManage, stations, categories, products, grou
         action={
           canManage && tab === "productos" ? (
             <>
-              <Link href="/carta/nuevo" className="h-10 px-4 rounded-2xl bg-accent text-white text-sm font-semibold hover:bg-accent-hover flex items-center gap-1.5"><Plus className="w-4 h-4" /> Nuevo producto</Link>
-              <Button variant="outline" size="sm" icon={<Percent className="w-4 h-4" />} onClick={() => setBulk(true)}>Actualizar precios</Button>
+              <Link href="/carta/nuevo" className={buttonClasses({ size: "sm" })}>Nuevo producto</Link>
+              <Button variant="outline" size="sm" onClick={() => setBulk(true)}>Actualizar precios</Button>
             </>
           ) : undefined
         }
@@ -99,19 +100,20 @@ function Products({ q, setQ, categories, products, canManage }: { q: string; set
                 const row = (
                   <>
                     <div className="min-w-0 flex-1">
-                      <p className={cn("text-sm font-medium truncate", p.available ? "text-text-primary" : "text-text-muted line-through")}>{p.name}</p>
+                      <p className={cn("text-sm font-medium leading-snug", p.available ? "text-text-primary" : "text-text-muted line-through")}>{p.name}</p>
                       <p className="text-xs text-text-muted truncate">
+                        <span className="sm:hidden font-semibold text-text-secondary tabular-nums">{p.openPrice ? "Precio libre" : formatCurrency(p.price)} · </span>
                         {p.station ?? "Sin estación"}{margin !== null ? ` · margen ${formatPercent(margin, 0)}` : ""}{!p.showInQrMenu ? " · oculto en QR" : ""}
                       </p>
                     </div>
-                    {!p.available && <Badge tone="error">Sin stock</Badge>}
-                    <span className="text-sm font-semibold tabular-nums w-28 text-right">{p.openPrice ? "Libre" : formatCurrency(p.price)}</span>
+                    {!p.available && <Badge tone="error" className="hidden sm:inline-flex">Sin stock</Badge>}
+                    <span className="hidden sm:block text-sm font-semibold tabular-nums w-28 text-right">{p.openPrice ? "Libre" : formatCurrency(p.price)}</span>
                   </>
                 );
                 return (
                   <div key={p.id} className="flex items-center gap-3 px-4 py-2 hover:bg-surface-secondary/60">
                     {canManage ? (
-                      <Link href={`/carta/${p.id}`} className="flex flex-1 min-w-0 items-center gap-3">{row}<ChevronRight className="w-4 h-4 text-text-muted shrink-0" /></Link>
+                      <Link href={`/carta/${p.id}`} className="flex flex-1 min-w-0 items-center gap-3 py-1">{row}</Link>
                     ) : (
                       <div className="flex flex-1 min-w-0 items-center gap-3">{row}</div>
                     )}
@@ -152,7 +154,7 @@ function Categories({ categories, stations }: { categories: Cat[]; stations: { i
             </div>
             <input defaultValue={c.name} onBlur={(e) => e.target.value.trim() && e.target.value !== c.name && call(() => api(`/api/categories/${c.id}`, { method: "PATCH", body: { name: e.target.value.trim() } }))} className="flex-1 min-w-32 h-10 px-3 rounded-xl border border-transparent hover:border-border focus:border-accent bg-transparent text-sm font-semibold outline-none" />
             <span className="text-xs text-text-muted w-20">{c.count} productos</span>
-            <div className="w-36"><Select value={c.color} onChange={(e) => call(() => api(`/api/categories/${c.id}`, { method: "PATCH", body: { color: e.target.value } }))} options={COLOR_OPTIONS.map((o) => ({ value: o, label: COLOR_LABEL[o] }))} /></div>
+            <span className="w-3 h-3 rounded-full shrink-0" style={{ background: solidColor(c.color) }} /><div className="w-32"><Select value={c.color} onChange={(e) => call(() => api(`/api/categories/${c.id}`, { method: "PATCH", body: { color: e.target.value } }))} options={COLOR_OPTIONS.map((o) => ({ value: o, label: COLOR_LABEL[o] }))} /></div>
             <div className="w-40"><Select value={c.stationId ?? ""} placeholder="Sin estación" onChange={(e) => call(() => api(`/api/categories/${c.id}`, { method: "PATCH", body: { stationId: e.target.value || null } }))} options={stations.map((s) => ({ value: s.id, label: s.name }))} /></div>
             <button onClick={() => call(() => api(`/api/categories/${c.id}`, { method: "DELETE" }))} className="tap-44 flex items-center justify-center rounded-xl text-text-muted hover:text-error hover:bg-error-subtle" aria-label="Borrar categoría"><Trash2 className="w-4 h-4" /></button>
           </div>
@@ -160,7 +162,7 @@ function Categories({ categories, stations }: { categories: Cat[]; stations: { i
       </div>
       <form onSubmit={(e) => { e.preventDefault(); if (name.trim()) call(() => api("/api/categories", { body: { name: name.trim() } })).then(() => setName("")); }} className="flex gap-2 max-w-md">
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nueva categoría" />
-        <Button type="submit" icon={<Plus className="w-4 h-4" />}>Agregar</Button>
+        <Button type="submit">Agregar</Button>
       </form>
     </div>
   );
@@ -183,7 +185,7 @@ function Groups({ groups }: { groups: Group[] }) {
           </button>
         ))}
       </div>
-      <Button variant="outline" icon={<Plus className="w-4 h-4" />} onClick={() => setEdit({ id: "", name: "", minSelect: 0, maxSelect: 1, products: 0, options: [{ name: "", priceDelta: 0, available: true }] })}>Nuevo grupo</Button>
+      <Button variant="outline" onClick={() => setEdit({ id: "", name: "", minSelect: 0, maxSelect: 1, products: 0, options: [{ name: "", priceDelta: 0, available: true }] })}>Nuevo grupo</Button>
       {edit && <GroupSheet group={edit} onClose={() => setEdit(null)} />}
     </div>
   );
@@ -218,7 +220,7 @@ function GroupSheet({ group, onClose }: { group: Group; onClose: () => void }) {
   }
   return (
     <Sheet open onClose={onClose} title={g.id ? g.name : "Nuevo grupo de opciones"} maxWidth="max-w-lg"
-      footer={<div className="flex gap-2">{g.id && <Button variant="danger-outline" onClick={remove} icon={<Trash2 className="w-4 h-4" />}>Borrar</Button>}<Button className="flex-1" loading={busy} disabled={!g.name.trim()} onClick={save}>Guardar</Button></div>}
+      footer={<div className="flex gap-2">{g.id && <Button variant="danger-outline" onClick={remove}>Borrar</Button>}<Button className="flex-1" loading={busy} disabled={!g.name.trim()} onClick={save}>Guardar</Button></div>}
     >
       <div className="space-y-4">
         <Input label="Nombre" value={g.name} onChange={(e) => setG({ ...g, name: e.target.value })} placeholder="Guarnición, Punto, Extras…" />
@@ -236,7 +238,7 @@ function GroupSheet({ group, onClose }: { group: Group; onClose: () => void }) {
               <button onClick={() => setG({ ...g, options: g.options.filter((_, j) => j !== i) })} className="tap-44 flex items-center justify-center rounded-xl text-text-muted hover:bg-surface-secondary" aria-label="Quitar opción"><X className="w-4 h-4" /></button>
             </div>
           ))}
-          <Button variant="outline" size="sm" icon={<Plus className="w-4 h-4" />} onClick={() => setG({ ...g, options: [...g.options, { name: "", priceDelta: 0, available: true }] })}>Opción</Button>
+          <Button variant="outline" size="sm" onClick={() => setG({ ...g, options: [...g.options, { name: "", priceDelta: 0, available: true }] })}>Opción</Button>
         </div>
       </div>
     </Sheet>

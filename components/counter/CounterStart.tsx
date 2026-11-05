@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Bike, ChevronRight, ShoppingBag, Store, MapPin, Phone, UserRound, Clock } from "lucide-react";
 import { Badge, Button, CurrencyInput, Input } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -16,17 +15,17 @@ import { formatCurrency, formatTime, cn } from "@/lib/utils";
 
 type Kind = "COUNTER" | "TAKEAWAY" | "DELIVERY";
 
-const KINDS: { kind: Kind; label: string; desc: string; icon: typeof Store }[] = [
-  { kind: "COUNTER", label: "Venta rápida", desc: "Cobrás y sale a cocina. Barra, café, kiosco del parador.", icon: Store },
-  { kind: "TAKEAWAY", label: "Para llevar", desc: "Con nombre para llamarlo cuando esté listo.", icon: ShoppingBag },
-  { kind: "DELIVERY", label: "Delivery", desc: "Con dirección, costo de envío y repartidor.", icon: Bike },
+const KINDS: { kind: Kind; label: string; desc: string }[] = [
+  { kind: "COUNTER", label: "Venta rápida", desc: "Abre la carta al instante. Cobrás y sale a cocina." },
+  { kind: "TAKEAWAY", label: "Para llevar", desc: "Con nombre para llamarlo cuando esté listo." },
+  { kind: "DELIVERY", label: "Delivery", desc: "Con dirección, envío y repartidor." },
 ];
 
 export function CounterStart({ recent }: { recent: { id: string; number: number; type: string; customerName: string | null; total: number; paid: number; openedAt: string; fulfillment: string | null; drafts: number }[] }) {
   useLiveRefresh(["order.changed", "kitchen.changed"]);
   const router = useRouter();
   const toast = useToast();
-  const [kind, setKind] = useState<Kind>("COUNTER");
+  const [kind, setKind] = useState<Kind>("TAKEAWAY");
   const [customer, setCustomer] = useState<PickedCustomer | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -41,6 +40,19 @@ export function CounterStart({ recent }: { recent: { id: string; number: number;
       setName(c.name);
       setPhone(c.phone ?? "");
       if (c.address) setAddress(c.address);
+    }
+  }
+
+  // Venta rápida: sin formulario, directo a la carta.
+  async function quick() {
+    setKind("COUNTER");
+    setBusy(true);
+    try {
+      const r = await api<{ id: string }>("/api/orders", { body: { type: "COUNTER" } });
+      router.push(`/pedidos/${r.id}`);
+    } catch (e) {
+      toast.error((e as Error).message);
+      setBusy(false);
     }
   }
 
@@ -79,13 +91,24 @@ export function CounterStart({ recent }: { recent: { id: string; number: number;
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="rounded-2xl border border-border bg-surface p-4 space-y-4">
           <div className="grid sm:grid-cols-3 gap-2">
-            {KINDS.map((k) => (
-              <button key={k.kind} onClick={() => setKind(k.kind)} className={cn("text-left rounded-2xl border p-3 transition-colors", kind === k.kind ? "border-accent bg-accent-light" : "border-border hover:bg-surface-secondary")}>
-                <k.icon className={cn("w-6 h-6 mb-2", kind === k.kind ? "text-accent" : "text-text-secondary")} />
-                <p className={cn("text-sm font-semibold", kind === k.kind ? "text-accent" : "text-text-primary")}>{k.label}</p>
-                <p className="text-xs text-text-secondary mt-0.5 leading-snug">{k.desc}</p>
-              </button>
-            ))}
+            {KINDS.map((k) => {
+              const on = kind === k.kind && k.kind !== "COUNTER";
+              const primary = k.kind === "COUNTER";
+              return (
+                <button
+                  key={k.kind}
+                  disabled={busy}
+                  onClick={() => (primary ? quick() : setKind(k.kind))}
+                  className={cn(
+                    "text-left rounded-2xl p-4 min-h-28 flex flex-col transition-colors disabled:opacity-60",
+                    primary ? "bg-accent text-white hover:bg-accent-hover" : on ? "border-2 border-accent bg-accent-subtle" : "border border-border hover:bg-surface-secondary",
+                  )}
+                >
+                  <p className={cn("text-lg font-bold", primary ? "text-white" : on ? "text-accent" : "text-text-primary")}>{k.label}</p>
+                  <p className={cn("text-sm mt-1 leading-snug", primary ? "text-white/80" : "text-text-secondary")}>{k.desc}</p>
+                </button>
+              );
+            })}
           </div>
           {kind !== "COUNTER" && (
             <>
@@ -94,12 +117,12 @@ export function CounterStart({ recent }: { recent: { id: string; number: number;
                 <CustomerPicker value={customer} onChange={pickCustomer} />
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
-                <Input label="Nombre para llamarlo" icon={<UserRound />} value={name} onChange={(e) => setName(e.target.value)} />
-                <Input label="Teléfono" icon={<Phone />} value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
+                <Input label="Nombre para llamarlo" value={name} onChange={(e) => setName(e.target.value)} />
+                <Input label="Teléfono" value={phone} onChange={(e) => setPhone(e.target.value)} inputMode="tel" />
               </div>
               {kind === "DELIVERY" && (
                 <div className="grid sm:grid-cols-[minmax(0,1fr)_12rem] gap-3">
-                  <Input label="Dirección de entrega" icon={<MapPin />} value={address} onChange={(e) => setAddress(e.target.value)} />
+                  <Input label="Dirección de entrega" value={address} onChange={(e) => setAddress(e.target.value)} />
                   <div>
                     <p className="text-sm font-medium mb-1.5">Envío</p>
                     <CurrencyInput value={fee} onChange={setFee} />
@@ -107,13 +130,15 @@ export function CounterStart({ recent }: { recent: { id: string; number: number;
                 </div>
               )}
               <div className="max-w-[12rem]">
-                <Input label="Para las (opcional)" icon={<Clock />} type="time" value={when} onChange={(e) => setWhen(e.target.value)} />
+                <Input label="Para las (opcional)" type="time" value={when} onChange={(e) => setWhen(e.target.value)} />
               </div>
             </>
           )}
-          <Button size="lg" fullWidth loading={busy} onClick={start} disabled={kind === "DELIVERY" && !address.trim()}>
-            Empezar {KINDS.find((k) => k.kind === kind)!.label.toLowerCase()}
-          </Button>
+          {kind !== "COUNTER" && (
+            <Button size="lg" fullWidth loading={busy} onClick={start} disabled={kind === "DELIVERY" && !address.trim()}>
+              Empezar pedido {kind === "DELIVERY" ? "de delivery" : "para llevar"}
+            </Button>
+          )}
         </div>
         <div>
           <h2 className="text-sm font-semibold text-text-primary mb-2">En curso</h2>
@@ -129,7 +154,6 @@ export function CounterStart({ recent }: { recent: { id: string; number: number;
                   <p className="text-sm font-semibold tabular-nums">{formatCurrency(o.total)}</p>
                   {o.drafts > 0 ? <Badge tone="warning">Sin marchar</Badge> : o.fulfillment ? <Badge tone="info">{FULFILLMENT_LABEL[o.fulfillment]}</Badge> : null}
                 </div>
-                <ChevronRight className="w-4 h-4 text-text-muted" />
               </Link>
             ))}
           </div>

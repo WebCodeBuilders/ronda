@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Download } from "lucide-react";
 import { Button, Input, tableCls } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -56,7 +55,7 @@ export function ReportsView({ report, prev, from, to }: { report: SalesReport; p
       <PageHeader
         title="Reportes"
         action={
-          <Button variant="outline" size="sm" icon={<Download className="w-4 h-4" />} onClick={() => csv([["Producto", "Categoría", "Cantidad", "Vendido"], ...r.byProduct.map((p) => [p.name, p.category, p.quantity, p.total])], `ventas-por-producto-${f}-${t}.csv`)}>
+          <Button variant="outline" size="sm" onClick={() => csv([["Producto", "Categoría", "Cantidad", "Vendido"], ...r.byProduct.map((p) => [p.name, p.category, p.quantity, p.total])], `ventas-por-producto-${f}-${t}.csv`)}>
             Exportar productos
           </Button>
         }

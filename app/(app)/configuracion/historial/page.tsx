@@ -36,7 +36,16 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
           <Link key={f.key} href={`/configuracion/historial?f=${f.key}`} className={cn("h-9 px-3 rounded-xl border text-sm font-semibold flex items-center", f.key === filter.key ? "bg-accent-light text-accent border-accent" : "border-border bg-surface text-text-secondary")}>{f.label}</Link>
         ))}
       </div>
-      <div className={tableCls.frame}>
+      <div className="md:hidden rounded-2xl border border-border bg-surface divide-y divide-border">
+        {logs.map((l) => (
+          <div key={l.id} className="px-4 py-3">
+            <p className="text-sm text-text-primary">{l.summary}</p>
+            <p className="text-xs text-text-muted mt-0.5">{formatDate(l.createdAt)} · {l.user?.name ?? "Sistema"}</p>
+          </div>
+        ))}
+        {logs.length === 0 && <p className="px-4 py-10 text-center text-sm text-text-secondary">Todavía no hay nada registrado con este filtro. Acá van a aparecer las anulaciones, descuentos, reaperturas, movimientos de caja y cambios de precio.</p>}
+      </div>
+      <div className={cn(tableCls.frame, "hidden md:block")}>
         <div className={tableCls.scroll}>
           <table className={tableCls.table}>
             <thead className={tableCls.thead}><tr><th className={tableCls.th}>Cuándo</th><th className={tableCls.th}>Quién</th><th className={tableCls.th}>Qué</th><th className={cn(tableCls.th, tableCls.thRight)}>Importe</th></tr></thead>
@@ -49,7 +58,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ f
                   <td className={cn(tableCls.td, tableCls.tdRight)}>{l.amount !== null && l.action !== "settings.update" ? (l.action === "product.bulk_price" ? `${l.amount} %` : formatCurrency(l.amount)) : "—"}</td>
                 </tr>
               ))}
-              {logs.length === 0 && <tr><td colSpan={4} className={cn(tableCls.td, "py-8 text-center text-text-secondary")}>Nada registrado con este filtro.</td></tr>}
+              {logs.length === 0 && <tr><td colSpan={4} className={cn(tableCls.td, "py-8 text-center text-text-secondary")}>Todavía no hay nada registrado con este filtro. Acá van a aparecer las anulaciones, descuentos, reaperturas, movimientos de caja y cambios de precio.</td></tr>}
             </tbody>
           </table>
         </div>

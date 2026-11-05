@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowDownLeft, ArrowUpRight, Lock, LockOpen, Wallet, ChevronRight, Calculator } from "lucide-react";
 import { Button, CurrencyInput, Input, Sheet, tableCls } from "@/components/ui";
 import { PageContainer } from "@/components/shared/PageContainer";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -49,9 +48,9 @@ export function CashView({ summary, isOpen, openOrders, history }: {
         action={
           isOpen ? (
             <>
-              <Button variant="outline" size="sm" icon={<ArrowDownLeft className="w-4 h-4" />} onClick={() => setPanel("IN")}>Ingreso</Button>
-              <Button variant="outline" size="sm" icon={<ArrowUpRight className="w-4 h-4" />} onClick={() => setPanel("OUT")}>Retiro</Button>
-              <Button size="sm" icon={<Lock className="w-4 h-4" />} onClick={() => setPanel("close")}>Cerrar caja</Button>
+              <Button variant="outline" size="sm" onClick={() => setPanel("IN")}>Ingreso</Button>
+              <Button variant="outline" size="sm" onClick={() => setPanel("OUT")}>Retiro</Button>
+              <Button size="sm" onClick={() => setPanel("close")}>Cerrar caja</Button>
             </>
           ) : null
         }
@@ -59,12 +58,37 @@ export function CashView({ summary, isOpen, openOrders, history }: {
 
       {!summary && (
         <div className="rounded-2xl border border-border bg-surface p-6 max-w-md">
-          <div className="w-12 h-12 rounded-2xl bg-accent-light text-accent flex items-center justify-center mb-3"><Wallet className="w-6 h-6" /></div>
           <h2 className="text-base font-semibold text-text-primary">La caja está cerrada</h2>
           <p className="text-sm text-text-secondary mt-1 mb-4">Abrila con el fondo de cambio para empezar a cobrar.</p>
           <p className="text-sm font-medium mb-1.5">Fondo inicial (efectivo en el cajón)</p>
           <CurrencyInput value={opening} onChange={setOpening} placeholder="0" />
-          <Button className="mt-4" fullWidth loading={busy} onClick={openCash} icon={<LockOpen className="w-4 h-4" />}>Abrir caja</Button>
+          <Button className="mt-4" fullWidth loading={busy} onClick={openCash}>Abrir caja</Button>
+        </div>
+      )}
+
+      {summary && (
+        <div className="grid gap-3 lg:gap-4 sm:grid-cols-2 mb-3 lg:mb-4">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">{summary.session.closedAt ? "Se contó en el cajón" : "En el cajón debería haber"}</p>
+            <p className="text-3xl font-bold tabular-nums text-text-primary mt-1">{formatCurrency(summary.session.closedAt && summary.session.countedCash !== null ? summary.session.countedCash : summary.totals.expectedCash)}</p>
+            <p className="text-sm text-text-secondary mt-1 tabular-nums">
+              Fondo {formatCurrency(summary.session.openingAmount)} + efectivo {formatCurrency(summary.totals.cashPayments)}
+              {summary.totals.ins ? ` + ingresos ${formatCurrency(summary.totals.ins)}` : ""}{summary.totals.outs ? ` − retiros ${formatCurrency(summary.totals.outs)}` : ""}
+            </p>
+            {summary.session.difference !== null && (
+              <p className={cn("text-sm font-semibold mt-1", Math.abs(summary.session.difference) < 0.01 ? "text-success-strong" : "text-error")}>
+                {Math.abs(summary.session.difference) < 0.01 ? "Cerró justo" : `Diferencia ${formatCurrency(summary.session.difference)}`}
+              </p>
+            )}
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="flex items-baseline justify-between gap-2">
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">Vendido en el turno</p>
+              <p className="text-sm text-text-secondary tabular-nums">{summary.totals.count} cobros</p>
+            </div>
+            <p className="text-3xl font-bold tabular-nums text-text-primary mt-1">{formatCurrency(summary.totals.sales)}</p>
+            <MethodBar methods={summary.methods} total={summary.totals.sales + summary.totals.surcharges} />
+          </div>
         </div>
       )}
 
@@ -165,7 +189,6 @@ export function CashView({ summary, isOpen, openOrders, history }: {
                   <p className="text-sm font-semibold tabular-nums">{formatCurrency(h.sales)}</p>
                   <p className={cn("text-xs tabular-nums", Math.abs(h.difference) < 0.01 ? "text-success-strong" : "text-error")}>{Math.abs(h.difference) < 0.01 ? "Cerró justo" : `Diferencia ${formatCurrency(h.difference)}`}</p>
                 </div>
-                <ChevronRight className="w-4 h-4 text-text-muted" />
               </Link>
             ))}
           </div>
@@ -240,12 +263,12 @@ function CloseSheet({ summary, openOrders, onClose }: { summary: CashSummary; op
 
   return (
     <Sheet open onClose={onClose} title="Cerrar caja" description={`Debería haber ${formatCurrency(summary.totals.expectedCash)} en efectivo.`} maxWidth="max-w-md"
-      footer={<Button fullWidth loading={busy} onClick={close} icon={<Lock className="w-4 h-4" />}>Cerrar con {formatCurrency(counted)}</Button>}
+      footer={<Button fullWidth loading={busy} onClick={close}>Cerrar con {formatCurrency(counted)}</Button>}
     >
       <div className="space-y-4">
         {openOrders > 0 && <p className="text-sm rounded-2xl bg-warning-subtle text-warning-strong px-3 py-2">Hay {openOrders} {openOrders === 1 ? "pedido abierto" : "pedidos abiertos"}. Se pueden cobrar en el próximo turno.</p>}
         <div>
-          <p className="text-sm font-semibold mb-2 flex items-center gap-1.5"><Calculator className="w-4 h-4" /> Contá los billetes</p>
+          <p className="text-sm font-semibold mb-2">Contá los billetes</p>
           <div className="grid grid-cols-2 gap-2">
             {BILLS.map((b) => (
               <label key={b} className="flex items-center gap-2 rounded-xl border border-border px-3 h-11">
@@ -267,5 +290,30 @@ function CloseSheet({ summary, openOrders, onClose }: { summary: CashSummary; op
         <Input label="Nota (opcional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
       </div>
     </Sheet>
+  );
+}
+
+const BAR_COLORS = ["var(--accent)", "var(--accent-secondary)", "var(--violet)", "var(--warning)", "var(--info)", "var(--success)"];
+
+/** Cómo se repartió la venta entre los medios de pago, en una sola barra. */
+function MethodBar({ methods, total }: { methods: CashSummary["methods"]; total: number }) {
+  const list = methods.filter((m) => m.amount + m.surcharge > 0);
+  if (!list.length || total <= 0) return <p className="text-sm text-text-muted mt-3">Todavía no hay cobros.</p>;
+  return (
+    <div className="mt-3">
+      <div className="flex h-2.5 rounded-full overflow-hidden bg-surface-secondary">
+        {list.map((m, i) => (
+          <div key={m.name} style={{ width: `${((m.amount + m.surcharge) / total) * 100}%`, background: BAR_COLORS[i % BAR_COLORS.length] }} />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2">
+        {list.map((m, i) => (
+          <span key={m.name} className="inline-flex items-center gap-1.5 text-xs text-text-secondary">
+            <span className="w-2 h-2 rounded-full" style={{ background: BAR_COLORS[i % BAR_COLORS.length] }} />
+            {m.name} <b className="text-text-primary tabular-nums">{formatCurrency(m.amount + m.surcharge)}</b>
+          </span>
+        ))}
+      </div>
+    </div>
   );
 }

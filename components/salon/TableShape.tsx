@@ -1,6 +1,5 @@
 "use client";
 
-import { Hand, Receipt, ChefHat, Clock, Umbrella, Armchair } from "lucide-react";
 import { TABLE_STATE_LABEL, TABLE_STATE_STYLE, type TableState } from "@/lib/salon/state";
 import { initials, solidColor } from "@/lib/colors";
 import { cn } from "@/lib/utils";
@@ -27,33 +26,31 @@ export type TableShapeProps = {
 };
 
 /**
- * Una mesa dibujada en el plano. La forma sigue al mueble (cuadrada, redonda,
- * banqueta, sombrilla, reposera) y el color al estado. Lo urgente late.
+ * Una mesa dibujada en el plano. La forma sigue al mueble y el color al
+ * estado; lo urgente late. Adentro, solo lo que se lee de lejos: el número
+ * de mesa, cuántos son y hace cuánto llegaron.
  */
 export function TableShape(p: TableShapeProps) {
   const style = TABLE_STATE_STYLE[p.state];
   const round = p.shape === "ROUND" || p.shape === "UMBRELLA" || p.shape === "BAR";
   const urgent = p.state === "CALLING" || p.state === "LATE" || p.state === "READY";
-  const Icon = p.state === "CALLING" ? Hand : p.state === "BILLING" ? Receipt : p.state === "READY" ? ChefHat : p.state === "LATE" ? Clock : null;
+  const busy = p.state !== "FREE" && p.state !== "RESERVED";
   return (
     <div
       className={cn(
-        "relative w-full h-full flex flex-col items-center justify-center border-2 select-none transition-colors",
+        "relative w-full h-full flex flex-col items-center justify-center border-2 select-none transition-[box-shadow,transform] [container-type:size]",
         round ? "rounded-full" : p.shape === "LOUNGER" ? "rounded-xl" : "rounded-2xl",
+        p.shape === "UMBRELLA" && !busy && "border-dashed",
         urgent && "rd-pulse",
         p.selected && "ring-4 ring-accent/30",
       )}
       style={{ background: style.bg, borderColor: style.border, color: style.text, ["--pulse-color" as string]: style.dot }}
       title={`Mesa ${p.name} · ${TABLE_STATE_LABEL[p.state]}`}
     >
-      {p.shape === "UMBRELLA" && p.state === "FREE" && <Umbrella className="absolute top-1.5 w-3.5 h-3.5 opacity-50" />}
-      {p.shape === "LOUNGER" && p.state === "FREE" && <Armchair className="absolute left-1.5 w-3.5 h-3.5 opacity-50" />}
-      <span className={cn("font-bold leading-none tabular-nums", p.compact ? "text-sm" : "text-lg")}>{p.name}</span>
-      {p.state !== "FREE" && p.state !== "RESERVED" && !p.compact && (
-        <span className="mt-1 flex items-center gap-1 text-[11px] font-semibold leading-none tabular-nums">
-          {Icon && <Icon className="w-3 h-3" />}
-          {p.guests ? `${p.guests}p` : null}
-          {p.elapsed ? <span className="opacity-80">· {p.elapsed}</span> : null}
+      <span className={cn("font-bold leading-none tabular-nums", p.compact ? "text-sm" : "text-[clamp(14px,28cqmin,26px)]")}>{p.name}</span>
+      {busy && !p.compact && (
+        <span className="mt-1 text-[clamp(10px,13cqmin,13px)] font-semibold leading-none tabular-nums opacity-90">
+          {p.guests ? `${p.guests}p` : ""}{p.elapsed ? ` · ${p.elapsed}` : ""}
         </span>
       )}
       {p.state === "RESERVED" && p.reservation && !p.compact && <span className="mt-1 text-[10px] font-semibold leading-none truncate max-w-[90%]">{p.reservation}</span>}
@@ -67,12 +64,12 @@ export function TableShape(p: TableShapeProps) {
         </span>
       )}
       {(p.readyItems ?? 0) > 0 && (
-        <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 h-4 rounded-full bg-success text-white text-[10px] font-bold flex items-center tabular-nums">
+        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-1.5 h-4 rounded-full bg-success text-white text-[10px] font-bold flex items-center tabular-nums whitespace-nowrap">
           {p.readyItems} listo{p.readyItems === 1 ? "" : "s"}
         </span>
       )}
       {(p.readyItems ?? 0) === 0 && (p.draftItems ?? 0) > 0 && (
-        <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-1.5 h-4 rounded-full bg-warning text-white text-[10px] font-bold flex items-center whitespace-nowrap">
+        <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-1.5 h-4 rounded-full bg-warning text-white text-[10px] font-bold flex items-center whitespace-nowrap">
           sin marchar
         </span>
       )}

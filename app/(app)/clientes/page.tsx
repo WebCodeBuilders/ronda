@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { pageUser } from "@/lib/auth/guard";
 import { PageContainer } from "@/components/shared/PageContainer";
@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Badge, tableCls } from "@/components/ui";
 import { NewCustomerButton } from "@/components/customers/NewCustomerButton";
 import { formatCurrency, formatDay, cn } from "@/lib/utils";
+import { initials } from "@/lib/colors";
 
 export const metadata = { title: "Clientes · ronda" };
 export const dynamic = "force-dynamic";
@@ -37,7 +38,27 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         <Link href="/clientes" className={cn("h-11 px-4 rounded-2xl border text-sm font-semibold flex items-center", sp.f !== "deuda" ? "bg-accent-light text-accent border-accent" : "border-border bg-surface text-text-secondary")}>Todos</Link>
         <Link href="/clientes?f=deuda" className={cn("h-11 px-4 rounded-2xl border text-sm font-semibold flex items-center", sp.f === "deuda" ? "bg-accent-light text-accent border-accent" : "border-border bg-surface text-text-secondary")}>Con deuda</Link>
       </form>
-      <div className={tableCls.frame}>
+      {/* Celular: tarjetas con iniciales, visitas y deuda. */}
+      <div className="md:hidden rounded-2xl border border-border bg-surface divide-y divide-border">
+        {customers.map((c) => {
+          const st = byId.get(c.id);
+          return (
+            <Link key={c.id} href={`/clientes/${c.id}`} className="flex items-center gap-3 px-4 py-3 active:bg-surface-secondary">
+              <span className="w-10 h-10 rounded-full bg-accent-light text-accent text-sm font-semibold flex items-center justify-center shrink-0">{initials(c.name)}</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-semibold text-text-primary truncate">{c.name}</p>
+                <p className="text-xs text-text-muted truncate">{st?._count ?? 0} visitas{c.phone ? ` · ${c.phone}` : ""}</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-sm font-semibold tabular-nums">{formatCurrency(st?._sum.total ?? 0)}</p>
+                {c.balance > 0 && <p className="text-xs font-semibold text-error tabular-nums">Debe {formatCurrency(c.balance)}</p>}
+              </div>
+            </Link>
+          );
+        })}
+        {customers.length === 0 && <p className="px-4 py-10 text-center text-sm text-text-secondary">{q ? "Nadie con esa búsqueda." : "Todavía no hay clientes."}</p>}
+      </div>
+      <div className={cn(tableCls.frame, "hidden md:block")}>
         <div className={tableCls.scroll}>
           <table className={tableCls.table}>
             <thead className={tableCls.thead}><tr><th className={tableCls.th}>Cliente</th><th className={cn(tableCls.th, "hidden sm:table-cell")}>Visitas</th><th className={cn(tableCls.th, "hidden md:table-cell")}>Última</th><th className={cn(tableCls.th, tableCls.thRight)}>Consumió</th><th className={cn(tableCls.th, tableCls.thRight)}>Debe</th><th className={tableCls.th} /></tr></thead>
@@ -51,7 +72,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                     <td className={cn(tableCls.td, tableCls.tdMuted, "hidden md:table-cell")}>{s?._max.closedAt ? formatDay(s._max.closedAt) : "—"}</td>
                     <td className={cn(tableCls.td, tableCls.tdRight)}>{formatCurrency(s?._sum.total ?? 0)}</td>
                     <td className={cn(tableCls.td, tableCls.tdRight, c.balance > 0 ? "text-error font-semibold" : "text-text-muted")}>{c.balance > 0 ? formatCurrency(c.balance) : "—"}</td>
-                    <td className={cn(tableCls.td, "w-8")}><Link href={`/clientes/${c.id}`} aria-label="Ver"><ChevronRight className="w-4 h-4 text-text-muted" /></Link></td>
+                    <td className={cn(tableCls.td, "w-4")} />
                   </tr>
                 );
               })}
